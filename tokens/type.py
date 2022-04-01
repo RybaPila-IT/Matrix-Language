@@ -29,12 +29,12 @@ class TokenType(Enum):
     MULTIPLY = auto(),
     DIVIDE = auto(),
     # Parenthesis and brackets.
-    OPEN_PARENTHESES = auto(),
-    CLOSE_PARENTHESES = auto(),
+    OPEN_ROUND_BRACKET = auto(),
+    CLOSE_ROUND_BRACKET = auto(),
     OPEN_CURLY_BRACKET = auto(),
-    CLOSE_CURLY_BRACE = auto(),
-    OPEN_SQUARE_BRACE = auto(),
-    CLOSE_SQUARE_BRACE = auto(),
+    CLOSE_CURLY_BRACKET = auto(),
+    OPEN_SQUARE_BRACKET = auto(),
+    CLOSE_SQUARE_BRACKET = auto(),
     # Single symbols.
     COMMA = auto(),
     ASSIGNMENT = auto(),
