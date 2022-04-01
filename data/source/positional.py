@@ -16,7 +16,7 @@ class PositionalSource:
 
         if next_char == '\n':
             self.row_number += 1
-            self.col_number = 0
+            self.col_number = 1
         elif next_char != '':
             self.col_number += 1
 

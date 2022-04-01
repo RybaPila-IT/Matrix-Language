@@ -19,9 +19,9 @@ class UnifiedSource:
 
     def next_char(self):
         if self.is_buffered:
-            return self.__return_buffered_char()
-
-        new_char = self.raw_source.next_char()
+            new_char = self.__char_from_buffer()
+        else:
+            new_char = self.__char_from_source()
 
         if new_char == '\r':
             return self.__try_handle_windows_new_line()
@@ -32,7 +32,10 @@ class UnifiedSource:
 
         return new_char
 
-    def __return_buffered_char(self):
+    def __char_from_source(self):
+        return self.raw_source.next_char()
+
+    def __char_from_buffer(self):
         self.is_buffered = False
         return self.buffer
 
@@ -41,6 +44,8 @@ class UnifiedSource:
         if new_char == '\n':
             # Here we know, that the sequence is '\r\n',
             # so we perform Windows unification
+            # We clear buffer, because the first char may come from
+            # the buffer.
             return '\n'
         self.__buffer_char(new_char)
         return '\r'
@@ -53,7 +58,9 @@ class UnifiedSource:
         new_char = self.raw_source.next_char()
         if new_char == '\r':
             # Here we know, that the sequence is '\n\r'
-            # so we perform RISC OS unification
+            # so we perform RISC OS unification.
+            # We clear buffer, because the first char may come from
+            # the buffer.
             return '\n'
         self.__buffer_char(new_char)
         return '\n'

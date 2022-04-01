@@ -23,7 +23,7 @@ class RawFileSource:
 class RawStringSource:
     def __init__(self, content: str):
         self.content = content
-        self.position = 0
+        self.position = -1
 
     def next_char(self):
         self.position = min(self.position + 1, len(self.content))
