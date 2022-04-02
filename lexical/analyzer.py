@@ -54,7 +54,8 @@ class LexicalAnalyzer:
             # On finish, self.token contains EOT token.
             return self.token
 
-        for try_build in [self.__try_build_symbolic_token,
+        for try_build in [self.__try_build_extensible_token,
+                          self.__try_build_inextensible_token,
                           self.__try_build_number,
                           self.__try_build_string,
                           self.__try_build_identifier]:
@@ -92,104 +93,37 @@ class LexicalAnalyzer:
 
         return ''.join(identifier_chars)
 
-    def __try_build_symbolic_token(self):
-        if self.__current_char() in TokenLookUpTable.parenthesis:
-            return self.__construct_parenthesis()
-        if self.__current_char() in TokenLookUpTable.numerical:
-            return self.__construct_numerical()
-        elif self.__current_char() in TokenLookUpTable.special:
-            return self.__construct_special()
-        elif (self.__current_char() in TokenLookUpTable.comparison or
-              self.__current_char() == '!' or
-              self.__current_char() == '='):
-            return self.__construct_comparison()
-
-        return False
-
-    def __construct_parenthesis(self):
+    def __try_build_inextensible_token(self):
+        if self.__current_char() not in TokenLookUpTable.inextensible:
+            return False
         self.token = Token(
-            token_type=TokenLookUpTable.parenthesis[self.__current_char()],
+            token_type=TokenLookUpTable.inextensible[self.__current_char()],
             value=self.__current_char(),
             position=self.__position()
         )
-        # Reading next char in order to maintain analyzer invariant.
         self.__next_char()
         return True
 
-    def __construct_numerical(self):
-        self.token = Token(
-            token_type=TokenLookUpTable.numerical[self.__current_char()],
-            value=self.__current_char(),
-            position=self.__position()
-        )
-        # Reading next char in order to maintain analyzer invariant.
-        self.__next_char()
-        return True
-
-    def __construct_special(self):
+    def __try_build_extensible_token(self):
+        if self.__current_char() not in TokenLookUpTable.extensible:
+            return False
         position = self.__position()
         prev_char = self.__current_char()
         self.__next_char()
-        if prev_char == ':' and self.__current_char() == '=':
+        if self.__current_char() == '=':
+            token_value = prev_char + self.__current_char()
             self.token = Token(
-                token_type=TokenType.ASSIGNMENT,
-                value=':=',
-                position=position
-            )
-            # Reading next char in order to maintain analyzer invariant.
-            self.__next_char()
-        else:
-            self.token = Token(
-                token_type=TokenLookUpTable.special[prev_char],
-                value=prev_char,
-                position=position
-            )
-        return True
-
-    def __construct_comparison(self):
-        if self.__current_char() == '<' or self.__current_char() == '>':
-            return self.__handle_inequality()
-        if self.__current_char() == '!' or self.__current_char() == '=':
-            return self.__handle_equality()
-
-        return False
-
-    def __handle_inequality(self):
-        position = self.__position()
-        start_char = self.__current_char()
-        self.__next_char()
-        if self.__current_char() != '=':
-            self.token = Token(
-                token_type=TokenLookUpTable.comparison[start_char],
-                value=start_char,
-                position=position
-            )
-        else:
-            token_value = start_char + self.__current_char()
-            self.token = Token(
-                token_type=TokenLookUpTable.comparison[token_value],
+                token_type=TokenLookUpTable.extensible[token_value],
                 value=token_value,
                 position=position
             )
-            # Reading next char in order to maintain analyzer invariant.
             self.__next_char()
-
-        return True
-
-    def __handle_equality(self):
-        position = self.__position()
-        start_char = self.__current_char()
-        self.__next_char()
-        if self.__current_char() != '=':
-            return False
-        token_value = start_char + self.__current_char()
-        self.token = Token(
-            token_type=TokenLookUpTable.comparison[token_value],
-            value=token_value,
-            position=position
-        )
-        # Reading next char in order to maintain analyzer invariant.
-        self.__next_char()
+        else:
+            self.token = Token(
+                token_type=TokenLookUpTable.extensible[prev_char],
+                value=prev_char,
+                position=position
+            )
         return True
 
     def __try_build_number(self):

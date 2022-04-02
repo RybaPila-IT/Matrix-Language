@@ -19,34 +19,29 @@ class TokenLookUpTable:
         "return": TokenType.RETURN,
         "and": TokenType.AND,
         "or": TokenType.OR,
-        "not": TokenType.NOT
     }
-    comparison = {
+    extensible = {
         "<=": TokenType.LESS_OR_EQUAL,
         ">=": TokenType.GREATER_OR_EQUAL,
         "==": TokenType.EQUAL,
         "!=": TokenType.NOT_EQUAL,
         "<": TokenType.LESS,
         ">": TokenType.GREATER,
+        "=": TokenType.ASSIGNMENT,
+        "!": TokenType.NOT
     }
-    parenthesis = {
+    inextensible = {
         "(": TokenType.OPEN_ROUND_BRACKET,
         ")": TokenType.CLOSE_ROUND_BRACKET,
         "{": TokenType.OPEN_CURLY_BRACKET,
         "}": TokenType.CLOSE_CURLY_BRACKET,
         "[": TokenType.OPEN_SQUARE_BRACKET,
-        "]": TokenType.CLOSE_SQUARE_BRACKET
-    }
-    numerical = {
+        "]": TokenType.CLOSE_SQUARE_BRACKET,
         "+": TokenType.PLUS,
         "-": TokenType.MINUS,
         "*": TokenType.MULTIPLY,
         "/": TokenType.DIVIDE,
-    }
-    special = {
         ",": TokenType.COMMA,
         ":": TokenType.COLON,
         ";": TokenType.SEMICOLON,
-        ":=": TokenType.ASSIGNMENT
     }
-
