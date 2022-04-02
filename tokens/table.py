@@ -8,7 +8,6 @@ class TokenLookUpTable:
     TokenLookUpTable contains dictionaries with:
          - keywords
          - comparison operators
-         - logic operators
          - parenthesis
          - numerical operators
          - assignment, colon, semicolon and coma
@@ -18,6 +17,9 @@ class TokenLookUpTable:
         "else": TokenType.ELSE,
         "until": TokenType.UNTIL,
         "return": TokenType.RETURN,
+        "and": TokenType.AND,
+        "or": TokenType.OR,
+        "not": TokenType.NOT
     }
     comparison = {
         "<=": TokenType.LESS_OR_EQUAL,
@@ -26,11 +28,6 @@ class TokenLookUpTable:
         "!=": TokenType.NOT_EQUAL,
         "<": TokenType.LESS,
         ">": TokenType.GREATER,
-    }
-    logic = {
-        "and": TokenType.AND,
-        "or": TokenType.OR,
-        "not": TokenType.NOT
     }
     parenthesis = {
         "(": TokenType.OPEN_ROUND_BRACKET,

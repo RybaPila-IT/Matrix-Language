@@ -38,10 +38,20 @@ class LexicalAnalyzer:
         self.__next_char()
 
     def next_token(self):
+        """
+        Returns next token read from the text.
 
+        If error is encountered, RuntimeError with debug information is raised.
+        Error includes:
+            - Invalid identifier or character.
+            - Wrong string literal.
+            - Wrong number definition.
+        :return: new token fetched from text.
+        """
         self.__trim_input()
 
         if self.finished:
+            # On finish, self.token contains EOT token.
             return self.token
 
         for try_build in [self.__try_build_symbolic_token,
@@ -59,16 +69,14 @@ class LexicalAnalyzer:
 
         position = self.__position()
         identifier = self.__read_identifier()
-        keyword_token = self.__try_construct_keyword_token(identifier, position)
-
-        if keyword_token is not None:
-            self.token = keyword_token
-        else:
-            self.token = Token(
-                token_type=TokenType.IDENTIFIER,
-                value=identifier,
-                position=position
-            )
+        token_type = (TokenLookUpTable.keywords[identifier]
+                      if identifier in TokenLookUpTable.keywords
+                      else TokenType.IDENTIFIER)
+        self.token = Token(
+            token_type=token_type,
+            value=identifier,
+            position=position
+        )
 
         return True
 
@@ -83,22 +91,6 @@ class LexicalAnalyzer:
             self.__next_char()
 
         return ''.join(identifier_chars)
-
-    @staticmethod
-    def __try_construct_keyword_token(identifier, position):
-        if identifier in TokenLookUpTable.keywords:
-            return Token(
-                token_type=TokenLookUpTable.keywords[identifier],
-                value=identifier,
-                position=position
-            )
-        if identifier in TokenLookUpTable.logic:
-            return Token(
-                token_type=TokenLookUpTable.logic[identifier],
-                value=identifier,
-                position=position
-            )
-        return None
 
     def __try_build_symbolic_token(self):
         if self.__current_char() in TokenLookUpTable.parenthesis:
@@ -135,31 +127,23 @@ class LexicalAnalyzer:
         return True
 
     def __construct_special(self):
-
         position = self.__position()
-
-        if self.__current_char() == ':':
-            self.__next_char()
-            if self.__current_char() == '=':
-                self.token = Token(
-                    token_type=TokenType.ASSIGNMENT,
-                    value=':=',
-                    position=position
-                )
-            else:
-                self.token = Token(
-                    token_type=TokenType.COLON,
-                    value=':',
-                    position=position
-                )
-        else:
+        prev_char = self.__current_char()
+        self.__next_char()
+        if prev_char == ':' and self.__current_char() == '=':
             self.token = Token(
-                token_type=TokenLookUpTable.special[self.__current_char()],
-                value=self.__current_char(),
+                token_type=TokenType.ASSIGNMENT,
+                value=':=',
                 position=position
             )
-        # Reading next char in order to maintain analyzer invariant.
-        self.__next_char()
+            # Reading next char in order to maintain analyzer invariant.
+            self.__next_char()
+        else:
+            self.token = Token(
+                token_type=TokenLookUpTable.special[prev_char],
+                value=prev_char,
+                position=position
+            )
         return True
 
     def __construct_comparison(self):
@@ -308,17 +292,15 @@ class LexicalAnalyzer:
     def __trim_input(self):
         if self.finished:
             return
-
         while self.__current_char().isspace() or self.__current_char() == '#':
             if self.__current_char() == '#':
                 self.__trim_comment()
             else:
                 self.__next_char()
-
         self.__check_if_finished()
 
     def __trim_comment(self):
-        while self.__current_char() != '\n' or self.__current_char() != '':
+        while self.__current_char() != '\n' and self.__current_char() != '':
             self.__next_char()
 
     def __check_if_finished(self):
