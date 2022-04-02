@@ -209,7 +209,64 @@ class LexicalAnalyzer:
         return True
 
     def __try_build_number(self):
-        return False
+        if not self.__current_char().isnumeric():
+            return False
+        if self.__current_char() == '0':
+            return self.__try_build_zero_starting_number()
+
+        return self.__try_build_regular_number()
+
+    def __try_build_zero_starting_number(self):
+        number = 0
+        position = self.__position()
+        self.__next_char()
+        if self.__current_char().isnumeric():
+            raise RuntimeError('invalid zero-staring number at position {}'.format(position))
+        if self.__current_char() == '.':
+            number = self.__try_build_decimal_part()
+        self.token = Token(
+            token_type=TokenType.NUMBER,
+            value=number,
+            position=position
+        )
+        return True
+
+    def __try_build_regular_number(self):
+        position = self.__position()
+        value = 0
+        while self.__current_char().isnumeric():
+            value = value * 10 + int(self.__current_char())
+            if value >= LexicalAnalyzer.MAX_NUMBER_VALUE:
+                raise RuntimeError('overflow of the number starting at position {}'.format(position))
+            self.__next_char()
+        if self.__current_char() == '.':
+            value += self.__try_build_decimal_part()
+        self.token = Token(
+            token_type=TokenType.NUMBER,
+            value=value,
+            position=position
+        )
+        return True
+
+    def __try_build_decimal_part(self):
+        position = self.__position()
+        value = 0
+        decimal = 0
+        # Omit '.' sign.
+        self.__next_char()
+        while self.__current_char().isnumeric():
+            decimal += 1
+            value = value * 10 + int(self.__current_char())
+
+            if decimal > LexicalAnalyzer.MAX_DECIMAL_PRECISION:
+                raise RuntimeError('too long decimal part starting at position {}'.format(position))
+
+            self.__next_char()
+
+        if decimal == 0:
+            raise RuntimeError('invalid decimal part starting at position {}'.format(position))
+
+        return value / (10 ** decimal)
 
     def __try_build_string(self):
         if self.__current_char() != '"':

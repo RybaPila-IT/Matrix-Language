@@ -200,7 +200,10 @@ class TestLexicalAnalyzer(unittest.TestCase):
             '"This is not closed string',
             '"This is not closed string ending with escape $',
             '"This is not closed string ending with escaped quote $"',
-            """\"The story revolves around the central character, Santiago. 
+            """\"
+                Summary of  $"The Old Man and the Sea$”
+                
+                The story revolves around the central character, Santiago. 
                 He has gone straight 84 days, without catching a single fish. 
                 Due to this, the people have started seeing him as ‘salao’, 
                 the worst of unluckiness. He is considered so unlucky that the young boy, 
@@ -259,6 +262,57 @@ class TestLexicalAnalyzer(unittest.TestCase):
                 Some tourists that same day see the marlin’s skeleton and mistake it as a shark. 
                 Now in the shack, the old man goes back to his sleep and dreams of lions that he had seen in 
                 his youth when he was in Africa. (1)   \""""
+        ]
+        for content in contents:
+            source = positional_string_source_pipe(content)
+            analyzer = LexicalAnalyzer(source)
+            with self.assertRaises(RuntimeError):
+                analyzer.next_token()
+
+    def test_valid_number_recognition(self):
+        """
+        Tests correct number representations recognitions.
+
+        Test cases contain:
+            - 0.
+            - Regular integer.
+            - 0 with decimal part.
+            - Regular integer with decimal part.
+        """
+        content = '0\n42\n0.42\n42.42'
+        source = positional_string_source_pipe(content)
+        expected_tokens = [
+            Token(TokenType.NUMBER, 0, (1, 1)),
+            Token(TokenType.NUMBER, 42, (2, 1)),
+            Token(TokenType.NUMBER, 0.42, (3, 1)),
+            Token(TokenType.NUMBER, 42.42, (4, 1)),
+            Token(TokenType.EOT, 'EOT', (4, 5)),
+        ]
+        analyzer = LexicalAnalyzer(source)
+        # Starting the test.
+        for token in expected_tokens:
+            recognized_token = analyzer.next_token()
+            self.assertEqual(token.type, recognized_token.type)
+            self.assertEqual(token.value, recognized_token.value)
+            self.assertEqual(token.position, recognized_token.position)
+
+    def test_invalid_number_recognition(self):
+        """
+        Tests invalid number representation recognition.
+
+        Test cases contain:
+            - Invalid 0-starting number.
+            - Empty decimal part (end of source and invalid character).
+            - Number overflow.
+            - Too long decimal part.
+        """
+        contents = [
+            "042",
+            "42.a",
+            "42. ",
+            "42.",
+            "999999999999999999",
+            "1.9999999999999999"
         ]
         for content in contents:
             source = positional_string_source_pipe(content)
