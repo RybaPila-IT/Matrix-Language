@@ -33,15 +33,30 @@ class TestLexicalAnalyzer(unittest.TestCase):
             self.assertEqual(token.value, recognized_token.value)
             self.assertEqual(token.position, recognized_token.position)
 
-    def test_too_long_identifier_recognition(self):
+    def test_invalid_identifier_recognition(self):
         """
-        Testing whether lexical analyzer throws an error on detecting too long identifier.
+        Testing lexical analyzer behaviour on invalid identifiers.
+
+        Test cases consist of:
+            - Invalid character in identifier (different places).
+            - Too long identifier.
         """
-        content = 'Lorem_ipsum_dolor_sit_amet_consectetur_adipiscing_elit_sed_do_eiusmod_tempor_incididunt_ut_labore_et_dolore_magna_aliqua_Ut_enim_ad_minim_veniam_quis_nostrud_exercitation_ullamco_laboris_nisi_ut_aliquip_ex_ea_commodo_consequat_Duis_aute_irure_dolor_in_reprehenderit_in_voluptate_velit_esse_cillum_dolore_eu_fugiat_nulla_pariatur_Excepteur_sint_occaecat_cupidatat_non_proident_sunt_in_culpa_qui_officia_deserunt_mollit_anim_idest_laborum'
-        source = positional_string_source_pipe(content)
-        analyzer = LexicalAnalyzer(source)
-        with self.assertRaises(RuntimeError):
-            analyzer.next_token()
+        contents = [
+            (0, '$'),
+            (1, 'al$_a'),
+            (1, 'ala_$'),
+            (1, 'ala_.'),
+            (0, 'Lorem_ipsum_dolor_sit_amet_consectetur_adipiscing_elit_sed_do_eiusmod_tempor_incididunt_ut_labore_et_dolore_magna_aliqua_Ut_enim_ad_minim_veniam_quis_nostrud_exercitation_ullamco_laboris_nisi_ut_aliquip_ex_ea_commodo_consequat_Duis_aute_irure_dolor_in_reprehenderit_in_voluptate_velit_esse_cillum_dolore_eu_fugiat_nulla_pariatur_Excepteur_sint_occaecat_cupidatat_non_proident_sunt_in_culpa_qui_officia_deserunt_mollit_anim_idest_laborum')
+        ]
+        for reps, content in contents:
+            source = positional_string_source_pipe(content)
+            analyzer = LexicalAnalyzer(source)
+            for i in range(reps):
+                analyzer.next_token()
+            with self.assertRaises(RuntimeError):
+                analyzer.next_token()
+
+
 
     def test_keywords_recognition(self):
         """
@@ -319,6 +334,121 @@ class TestLexicalAnalyzer(unittest.TestCase):
             analyzer = LexicalAnalyzer(source)
             with self.assertRaises(RuntimeError):
                 analyzer.next_token()
+
+    def test_small_valid_program_1(self):
+        content = """
+                    # This line should be ignored
+                    my_func() {
+                        return 42.42
+                    }
+                """
+        source = positional_string_source_pipe(content)
+        expected_tokens = [
+            Token(TokenType.IDENTIFIER, 'my_func', (3, 21)),
+            Token(TokenType.OPEN_ROUND_BRACKET, '(', (3, 28)),
+            Token(TokenType.CLOSE_ROUND_BRACKET, ')', (3, 29)),
+            Token(TokenType.OPEN_CURLY_BRACKET, '{', (3, 31)),
+            Token(TokenType.RETURN, 'return', (4, 25)),
+            Token(TokenType.NUMBER, 42.42, (4, 32)),
+            Token(TokenType.CLOSE_CURLY_BRACKET, '}', (5, 21)),
+            Token(TokenType.EOT, 'EOT', (6, 16)),
+        ]
+        analyzer = LexicalAnalyzer(source)
+        # Starting the test.
+        for token in expected_tokens:
+            recognized_token = analyzer.next_token()
+            self.assertEqual(token.type, recognized_token.type)
+            self.assertEqual(token.value, recognized_token.value)
+            self.assertEqual(token.position, recognized_token.position)
+
+    def test_small_valid_program_2(self):
+        content = """
+                    matrix[0, 2] := 13
+                    matrix[:, 0] := [1.2; 1.3; 1.4;]
+                """
+        source = positional_string_source_pipe(content)
+        expected_tokens = [
+            # First line of the input.
+            Token(TokenType.IDENTIFIER, 'matrix', (2, 21)),
+            Token(TokenType.OPEN_SQUARE_BRACKET, '[', (2, 27)),
+            Token(TokenType.NUMBER, 0, (2, 28)),
+            Token(TokenType.COMMA, ',', (2, 29)),
+            Token(TokenType.NUMBER, 2, (2, 31)),
+            Token(TokenType.CLOSE_SQUARE_BRACKET, ']', (2, 32)),
+            Token(TokenType.ASSIGNMENT, ':=', (2, 34)),
+            Token(TokenType.NUMBER, 13, (2, 37)),
+            # Second line of the input.
+            Token(TokenType.IDENTIFIER, 'matrix', (3, 21)),
+            Token(TokenType.OPEN_SQUARE_BRACKET, '[', (3, 27)),
+            Token(TokenType.COLON, ':', (3, 28)),
+            Token(TokenType.COMMA, ',', (3, 29)),
+            Token(TokenType.NUMBER, 0, (3, 31)),
+            Token(TokenType.CLOSE_SQUARE_BRACKET, ']', (3, 32)),
+            Token(TokenType.ASSIGNMENT, ':=', (3, 34)),
+            Token(TokenType.OPEN_SQUARE_BRACKET, '[', (3, 37)),
+            Token(TokenType.NUMBER, 1.2, (3, 38)),
+            Token(TokenType.SEMICOLON, ';', (3, 41)),
+            Token(TokenType.NUMBER, 1.3, (3, 43)),
+            Token(TokenType.SEMICOLON, ';', (3, 46)),
+            Token(TokenType.NUMBER, 1.4, (3, 48)),
+            Token(TokenType.SEMICOLON, ';', (3, 51)),
+            Token(TokenType.CLOSE_SQUARE_BRACKET, ']', (3, 52)),
+            # End of the sequence.
+            Token(TokenType.EOT, 'EOT', (4, 16)),
+        ]
+        analyzer = LexicalAnalyzer(source)
+        # Starting the test.
+        for token in expected_tokens:
+            recognized_token = analyzer.next_token()
+            self.assertEqual(token.type, recognized_token.type)
+            self.assertEqual(token.value, recognized_token.value)
+            self.assertEqual(token.position, recognized_token.position)
+
+    def test_small_valid_program_3(self):
+        content = """
+                    until(i <= 2 and j >= 5) {
+                        i := i + 1.0
+                        j := j - 2.0
+                    }
+                """
+        source = positional_string_source_pipe(content)
+        expected_tokens = [
+            # 2nd line of the input.
+            Token(TokenType.UNTIL, 'until', (2, 21)),
+            Token(TokenType.OPEN_ROUND_BRACKET, '(', (2, 26)),
+            Token(TokenType.IDENTIFIER, 'i', (2, 27)),
+            Token(TokenType.LESS_OR_EQUAL, '<=', (2, 29)),
+            Token(TokenType.NUMBER, 2, (2, 32)),
+            Token(TokenType.AND, 'and', (2, 34)),
+            Token(TokenType.IDENTIFIER, 'j', (2, 38)),
+            Token(TokenType.GREATER_OR_EQUAL, '>=', (2, 40)),
+            Token(TokenType.NUMBER, 5, (2, 43)),
+            Token(TokenType.CLOSE_ROUND_BRACKET, ')', (2, 44)),
+            Token(TokenType.OPEN_CURLY_BRACKET, '{', (2, 46)),
+            # 3rd line of the input.
+            Token(TokenType.IDENTIFIER, 'i', (3, 25)),
+            Token(TokenType.ASSIGNMENT, ':=', (3, 27)),
+            Token(TokenType.IDENTIFIER, 'i', (3, 30)),
+            Token(TokenType.PLUS, '+', (3, 32)),
+            Token(TokenType.NUMBER, 1, (3, 34)),
+            # 4th line of the input.
+            Token(TokenType.IDENTIFIER, 'j', (4, 25)),
+            Token(TokenType.ASSIGNMENT, ':=', (4, 27)),
+            Token(TokenType.IDENTIFIER, 'j', (4, 30)),
+            Token(TokenType.MINUS, '-', (4, 32)),
+            Token(TokenType.NUMBER, 2, (4, 34)),
+            # 5th line of the input.
+            Token(TokenType.CLOSE_CURLY_BRACKET, '}', (5, 21)),
+            # End of the input.
+            Token(TokenType.EOT, 'EOT', (6, 16)),
+        ]
+        analyzer = LexicalAnalyzer(source)
+        # Starting the test.
+        for token in expected_tokens:
+            recognized_token = analyzer.next_token()
+            self.assertEqual(token.type, recognized_token.type)
+            self.assertEqual(token.value, recognized_token.value)
+            self.assertEqual(token.position, recognized_token.position)
 
 
 if __name__ == '__main__':

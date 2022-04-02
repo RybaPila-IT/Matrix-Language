@@ -152,6 +152,7 @@ class LexicalAnalyzer:
                     value=':',
                     position=position
                 )
+                return True
         else:
             self.token = Token(
                 token_type=TokenLookUpTable.special[self.__current_char()],
@@ -318,7 +319,7 @@ class LexicalAnalyzer:
         self.__check_if_finished()
 
     def __trim_comment(self):
-        while self.__current_char() != '\n' or self.__current_char() != '':
+        while self.__current_char() != '\n' and self.__current_char() != '':
             self.__next_char()
 
     def __check_if_finished(self):
