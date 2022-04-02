@@ -50,5 +50,6 @@ class TokenLookUpTable:
         ",": TokenType.COMMA,
         ":": TokenType.COLON,
         ";": TokenType.SEMICOLON,
-        "=": TokenType.ASSIGNMENT
+        ":=": TokenType.ASSIGNMENT
     }
+
