@@ -212,7 +212,41 @@ class LexicalAnalyzer:
         return False
 
     def __try_build_string(self):
-        return False
+        if self.__current_char() != '"':
+            return False
+        position = self.__position()
+        string = self.__try_read_string_content()
+        self.token = Token(
+            token_type=TokenType.STRING,
+            value=string,
+            position=position
+        )
+        return True
+
+    def __try_read_string_content(self):
+        # Omit starting quote sign.
+        position = self.__position()
+        string_chars = []
+        self.__next_char()
+
+        while self.__current_char() != '"':
+            # We have reached the end of source without second quote sign.
+            if self.__current_char() == '':
+                raise RuntimeError('invalid string (lack of ending) at position {}'.format(position))
+            if self.__current_char() == '$':
+                # Skip '$' sign and read next char, which
+                # will be appended directly to string characters.
+                self.__next_char()
+
+            string_chars.append(self.__current_char())
+
+            if len(string_chars) > LexicalAnalyzer.MAX_STRING_SIZE:
+                raise RuntimeError('string starting at position {} is too long.'.format(position))
+
+            self.__next_char()
+        # Reading next char in order to maintain analyzer invariant.
+        self.__next_char()
+        return ''.join(string_chars)
 
     def __trim_input(self):
         if self.finished:
