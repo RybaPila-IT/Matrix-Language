@@ -1,7 +1,3 @@
-from data.source.raw import RawStringSource
-
+# For now, this is a dead script.
 if __name__ == '__main__':
-    content = 'This is my text'
-    raw_source = RawStringSource(content)
-    for i in range(len(content)):
-        print(raw_source.next_char())
+    print('This is where my {} will be!'.format('awesome program'))

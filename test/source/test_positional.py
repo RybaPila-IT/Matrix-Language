@@ -20,14 +20,13 @@ class TestPositionalSource(unittest.TestCase):
             (5, 3),
             (5, 4),
         ]
+        end_position = (5, 5)
         pos_source = positional_string_source_pipe(content)
         for pos, char in zip(positions, expected):
-            self.assertEqual(pos[0], pos_source.position()[0])
-            self.assertEqual(pos[1], pos_source.position()[1])
+            self.assertEqual(pos, pos_source.position())
             self.assertEqual(char, pos_source.next_char())
         self.assertEqual('', pos_source.next_char())
-        self.assertEqual(positions[len(positions) - 1][0], pos_source.position()[0])
-        self.assertEqual(positions[len(positions) - 1][1] + 1, pos_source.position()[1])
+        self.assertEqual(end_position, pos_source.position())
 
 
 if __name__ == '__main__':
