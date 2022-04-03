@@ -56,17 +56,15 @@ class TestLexicalAnalyzer(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 analyzer.next_token()
 
-
-
     def test_keywords_recognition(self):
         """
         Testing keywords recognition by lexical analyzer.
 
         Testing keywords are:
             - Condition-flow statements: return, if, else, until.
-            - Logic operators: and, or, not.
+            - Logic operators: and, or.
         """
-        content = 'return if else until\nand or not'
+        content = 'return if else until\nand or'
         source = positional_string_source_pipe(content)
         expected_tokens = [
             Token(TokenType.RETURN, 'return', (1, 1)),
@@ -75,8 +73,7 @@ class TestLexicalAnalyzer(unittest.TestCase):
             Token(TokenType.UNTIL, 'until', (1, 16)),
             Token(TokenType.AND, 'and', (2, 1)),
             Token(TokenType.OR, 'or', (2, 5)),
-            Token(TokenType.NOT, 'not', (2, 8)),
-            Token(TokenType.EOT, 'EOT', (2, 10))
+            Token(TokenType.EOT, 'EOT', (2, 6))
         ]
         analyzer = LexicalAnalyzer(source)
         # Starting the test.
@@ -136,16 +133,17 @@ class TestLexicalAnalyzer(unittest.TestCase):
         """
         Tests language-specific operators.
 
-        Language specific operators consist of: ':', ';', ',' and ':='
+        Language specific operators consist of: ':', ';', ',', '=' and '!'
         """
-        content = ': ; , :='
+        content = ': ; , = !'
         source = positional_string_source_pipe(content)
         expected_tokens = [
             Token(TokenType.COLON, ':', (1, 1)),
             Token(TokenType.SEMICOLON, ';', (1, 3)),
             Token(TokenType.COMMA, ',', (1, 5)),
-            Token(TokenType.ASSIGNMENT, ':=', (1, 7)),
-            Token(TokenType.EOT, 'EOT', (1, 8))
+            Token(TokenType.ASSIGNMENT, '=', (1, 7)),
+            Token(TokenType.NOT, '!', (1, 9)),
+            Token(TokenType.EOT, 'EOT', (1, 9))
         ]
         analyzer = LexicalAnalyzer(source)
         # Starting the test.
@@ -363,8 +361,8 @@ class TestLexicalAnalyzer(unittest.TestCase):
 
     def test_small_valid_program_2(self):
         content = """
-                    matrix[0, 2] := 13
-                    matrix[:, 0] := [1.2; 1.3; 1.4;]
+                    matrix[0, 2] = 13
+                    matrix[:, 0] = [1.2; 1.3; 1.4;]
                 """
         source = positional_string_source_pipe(content)
         expected_tokens = [
@@ -375,8 +373,8 @@ class TestLexicalAnalyzer(unittest.TestCase):
             Token(TokenType.COMMA, ',', (2, 29)),
             Token(TokenType.NUMBER, 2, (2, 31)),
             Token(TokenType.CLOSE_SQUARE_BRACKET, ']', (2, 32)),
-            Token(TokenType.ASSIGNMENT, ':=', (2, 34)),
-            Token(TokenType.NUMBER, 13, (2, 37)),
+            Token(TokenType.ASSIGNMENT, '=', (2, 34)),
+            Token(TokenType.NUMBER, 13, (2, 36)),
             # Second line of the input.
             Token(TokenType.IDENTIFIER, 'matrix', (3, 21)),
             Token(TokenType.OPEN_SQUARE_BRACKET, '[', (3, 27)),
@@ -384,15 +382,15 @@ class TestLexicalAnalyzer(unittest.TestCase):
             Token(TokenType.COMMA, ',', (3, 29)),
             Token(TokenType.NUMBER, 0, (3, 31)),
             Token(TokenType.CLOSE_SQUARE_BRACKET, ']', (3, 32)),
-            Token(TokenType.ASSIGNMENT, ':=', (3, 34)),
-            Token(TokenType.OPEN_SQUARE_BRACKET, '[', (3, 37)),
-            Token(TokenType.NUMBER, 1.2, (3, 38)),
-            Token(TokenType.SEMICOLON, ';', (3, 41)),
-            Token(TokenType.NUMBER, 1.3, (3, 43)),
-            Token(TokenType.SEMICOLON, ';', (3, 46)),
-            Token(TokenType.NUMBER, 1.4, (3, 48)),
-            Token(TokenType.SEMICOLON, ';', (3, 51)),
-            Token(TokenType.CLOSE_SQUARE_BRACKET, ']', (3, 52)),
+            Token(TokenType.ASSIGNMENT, '=', (3, 34)),
+            Token(TokenType.OPEN_SQUARE_BRACKET, '[', (3, 36)),
+            Token(TokenType.NUMBER, 1.2, (3, 37)),
+            Token(TokenType.SEMICOLON, ';', (3, 40)),
+            Token(TokenType.NUMBER, 1.3, (3, 42)),
+            Token(TokenType.SEMICOLON, ';', (3, 45)),
+            Token(TokenType.NUMBER, 1.4, (3, 47)),
+            Token(TokenType.SEMICOLON, ';', (3, 50)),
+            Token(TokenType.CLOSE_SQUARE_BRACKET, ']', (3, 51)),
             # End of the sequence.
             Token(TokenType.EOT, 'EOT', (4, 16)),
         ]
@@ -407,8 +405,8 @@ class TestLexicalAnalyzer(unittest.TestCase):
     def test_small_valid_program_3(self):
         content = """
                     until(i <= 2 and j >= 5) {
-                        i := i + 1.0
-                        j := j - 2.0
+                        i = i + 1.0
+                        j = j - 2.0
                     }
                 """
         source = positional_string_source_pipe(content)
@@ -427,16 +425,16 @@ class TestLexicalAnalyzer(unittest.TestCase):
             Token(TokenType.OPEN_CURLY_BRACKET, '{', (2, 46)),
             # 3rd line of the input.
             Token(TokenType.IDENTIFIER, 'i', (3, 25)),
-            Token(TokenType.ASSIGNMENT, ':=', (3, 27)),
-            Token(TokenType.IDENTIFIER, 'i', (3, 30)),
-            Token(TokenType.PLUS, '+', (3, 32)),
-            Token(TokenType.NUMBER, 1, (3, 34)),
+            Token(TokenType.ASSIGNMENT, '=', (3, 27)),
+            Token(TokenType.IDENTIFIER, 'i', (3, 29)),
+            Token(TokenType.PLUS, '+', (3, 31)),
+            Token(TokenType.NUMBER, 1, (3, 33)),
             # 4th line of the input.
             Token(TokenType.IDENTIFIER, 'j', (4, 25)),
-            Token(TokenType.ASSIGNMENT, ':=', (4, 27)),
-            Token(TokenType.IDENTIFIER, 'j', (4, 30)),
-            Token(TokenType.MINUS, '-', (4, 32)),
-            Token(TokenType.NUMBER, 2, (4, 34)),
+            Token(TokenType.ASSIGNMENT, '=', (4, 27)),
+            Token(TokenType.IDENTIFIER, 'j', (4, 29)),
+            Token(TokenType.MINUS, '-', (4, 31)),
+            Token(TokenType.NUMBER, 2, (4, 33)),
             # 5th line of the input.
             Token(TokenType.CLOSE_CURLY_BRACKET, '}', (5, 21)),
             # End of the input.
