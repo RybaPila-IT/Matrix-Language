@@ -15,23 +15,35 @@ class LexicalAnalyzer:
     EOT token.
     """
 
-    MAX_STRING_SIZE = 1024
-    MAX_IDENTIFIER_LENGTH = 256
-    MAX_NUMBER_VALUE = 2147483647
-    MAX_DECIMAL_PRECISION = 8
+    default_options = {
+        'MAX_STRING_SIZE': 1024,
+        'MAX_IDENTIFIER_LENGTH': 256,
+        'MAX_NUMBER_VALUE': 2147483647,
+        'MAX_DECIMAL_PRECISION': 8
+    }
 
-    def __init__(self, positional_source):
+    def __init__(self, positional_source, options=None):
         """
         LexicalAnalyzer constructor.
 
         LexicalAnalyzer requires source to be a positional source, or at least
         to implement next_char() and position() methods.
 
+        Optional parameter 'options' should be a dictionary containing keys:
+                - MAX_STRING_SIZE.
+                - MAX_IDENTIFIER_LENGTH.
+                - MAX_NUMBER_VALUE.
+                - MAX_DECIMAL_PRECISION.
+
         :param positional_source: source implementing PositionalSource "interface".
         """
         self.source = positional_source
         self.buffer = ''
         self.token = None
+        self.options = ({**LexicalAnalyzer.default_options, **options}
+                        if options is not None
+                        else LexicalAnalyzer.default_options)
+        # Fix finishing convention -----> from finished to '' recognition.
         self.finished = False
         # Invariant: in buffer there is a fresh, new
         # character which needs investigation.
@@ -87,13 +99,15 @@ class LexicalAnalyzer:
 
         while self.__current_char().isalnum() or self.__current_char() == '_':
             identifier_chars.append(self.__current_char())
-            if len(identifier_chars) == LexicalAnalyzer.MAX_IDENTIFIER_LENGTH:
+            if len(identifier_chars) == self.options['MAX_IDENTIFIER_LENGTH']:
                 raise RuntimeError('identifier starting at position {} is too long'.format(position))
             self.__next_char()
 
         return ''.join(identifier_chars)
 
     def __try_build_inextensible_token(self):
+        # Refactor into get.
+        # With walrus operator.
         if self.__current_char() not in TokenLookUpTable.inextensible:
             return False
         self.token = Token(
@@ -105,6 +119,7 @@ class LexicalAnalyzer:
         return True
 
     def __try_build_extensible_token(self):
+        #
         if self.__current_char() not in TokenLookUpTable.extensible:
             return False
         position = self.__position()
@@ -127,7 +142,7 @@ class LexicalAnalyzer:
         return True
 
     def __try_build_number(self):
-        if not self.__current_char().isnumeric():
+        if not self.__current_char().isdecimal():
             return False
         if self.__current_char() == '0':
             return self.__try_build_zero_starting_number()
@@ -138,7 +153,7 @@ class LexicalAnalyzer:
         number = 0
         position = self.__position()
         self.__next_char()
-        if self.__current_char().isnumeric():
+        if self.__current_char().isdecimal():
             raise RuntimeError('invalid zero-staring number at position {}'.format(position))
         if self.__current_char() == '.':
             number = self.__try_build_decimal_part()
@@ -152,9 +167,9 @@ class LexicalAnalyzer:
     def __try_build_regular_number(self):
         position = self.__position()
         value = 0
-        while self.__current_char().isnumeric():
+        while self.__current_char().isdecimal():
             value = value * 10 + int(self.__current_char())
-            if value >= LexicalAnalyzer.MAX_NUMBER_VALUE:
+            if value >= self.options['MAX_NUMBER_VALUE']:
                 raise RuntimeError('overflow of the number starting at position {}'.format(position))
             self.__next_char()
         if self.__current_char() == '.':
@@ -172,11 +187,11 @@ class LexicalAnalyzer:
         decimal = 0
         # Omit '.' sign.
         self.__next_char()
-        while self.__current_char().isnumeric():
+        while self.__current_char().isdecimal():
             decimal += 1
             value = value * 10 + int(self.__current_char())
 
-            if decimal > LexicalAnalyzer.MAX_DECIMAL_PRECISION:
+            if decimal > self.options['MAX_DECIMAL_PRECISION']:
                 raise RuntimeError('too long decimal part starting at position {}'.format(position))
 
             self.__next_char()
@@ -198,6 +213,8 @@ class LexicalAnalyzer:
         )
         return True
 
+    # Add custom class of exception.
+
     def __try_read_string_content(self):
         # Omit starting quote sign.
         position = self.__position()
@@ -205,17 +222,17 @@ class LexicalAnalyzer:
         self.__next_char()
 
         while self.__current_char() != '"':
-            # We have reached the end of source without second quote sign.
-            if self.__current_char() == '':
-                raise RuntimeError('invalid string (lack of ending) at position {}'.format(position))
             if self.__current_char() == '$':
                 # Skip '$' sign and read next char, which
                 # will be appended directly to string characters.
                 self.__next_char()
+            # We have reached the end of source without second quote sign.
+            if self.__current_char() == '':
+                raise RuntimeError('invalid string (lack of ending) at position {}'.format(position))
 
             string_chars.append(self.__current_char())
 
-            if len(string_chars) > LexicalAnalyzer.MAX_STRING_SIZE:
+            if len(string_chars) > self.options['MAX_STRING_SIZE']:
                 raise RuntimeError('string starting at position {} is too long.'.format(position))
 
             self.__next_char()
