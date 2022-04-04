@@ -43,8 +43,6 @@ class LexicalAnalyzer:
         self.options = ({**LexicalAnalyzer.default_options, **options}
                         if options is not None
                         else LexicalAnalyzer.default_options)
-        # Fix finishing convention -----> from finished to '' recognition.
-        self.finished = False
         # Invariant: in buffer there is a fresh, new
         # character which needs investigation.
         self.__next_char()
@@ -62,9 +60,12 @@ class LexicalAnalyzer:
         """
         self.__trim_input()
 
-        if self.finished:
-            # On finish, self.token contains EOT token.
-            return self.token
+        if self.__end_of_text():
+            return Token(
+                token_type=TokenType.EOT,
+                value=TokenType.EOT.name,
+                position=self.__position()
+            )
 
         for try_build in [self.__try_build_extensible_token,
                           self.__try_build_inextensible_token,
@@ -241,27 +242,18 @@ class LexicalAnalyzer:
         return ''.join(string_chars)
 
     def __trim_input(self):
-        if self.finished:
-            return
         while self.__current_char().isspace() or self.__current_char() == '#':
             if self.__current_char() == '#':
                 self.__trim_comment()
             else:
                 self.__next_char()
-        self.__check_if_finished()
 
     def __trim_comment(self):
         while self.__current_char() != '\n' and self.__current_char() != '':
             self.__next_char()
 
-    def __check_if_finished(self):
-        if self.__current_char() == '':
-            self.finished = True
-            self.token = Token(
-                token_type=TokenType.EOT,
-                value=TokenType.EOT.name,
-                position=self.__position()
-            )
+    def __end_of_text(self):
+        return self.__current_char() == ''
 
     def __position(self):
         row, col = self.source.position()

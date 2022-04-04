@@ -23,6 +23,8 @@ class TestLexicalAnalyzer(unittest.TestCase):
             Token(TokenType.IDENTIFIER, 'my_id', (1, 5)),
             Token(TokenType.IDENTIFIER, 'if_else', (2, 1)),
             Token(TokenType.IDENTIFIER, 'h1e2l3l4o5', (2, 9)),
+            Token(TokenType.EOT, 'EOT', (2, 18)),
+            Token(TokenType.EOT, 'EOT', (2, 18)),
             Token(TokenType.EOT, 'EOT', (2, 18))
         ]
         analyzer = LexicalAnalyzer(source)
