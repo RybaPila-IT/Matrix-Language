@@ -2,6 +2,7 @@ import unittest
 from data.source.pipeline import positional_string_source_pipe
 from lexical.analyzer import LexicalAnalyzer
 from tokens.token import Token, TokenType
+from lexical.exception import *
 
 
 class TestLexicalAnalyzer(unittest.TestCase):
@@ -23,6 +24,8 @@ class TestLexicalAnalyzer(unittest.TestCase):
             Token(TokenType.IDENTIFIER, 'my_id', (1, 5)),
             Token(TokenType.IDENTIFIER, 'if_else', (2, 1)),
             Token(TokenType.IDENTIFIER, 'h1e2l3l4o5', (2, 9)),
+            Token(TokenType.EOT, 'EOT', (2, 18)),
+            Token(TokenType.EOT, 'EOT', (2, 18)),
             Token(TokenType.EOT, 'EOT', (2, 18))
         ]
         analyzer = LexicalAnalyzer(source)
@@ -45,16 +48,25 @@ class TestLexicalAnalyzer(unittest.TestCase):
             (0, '$'),
             (1, 'al$_a'),
             (1, 'ala_$'),
-            (1, 'ala_.'),
-            (0, 'Lorem_ipsum_dolor_sit_amet_consectetur_adipiscing_elit_sed_do_eiusmod_tempor_incididunt_ut_labore_et_dolore_magna_aliqua_Ut_enim_ad_minim_veniam_quis_nostrud_exercitation_ullamco_laboris_nisi_ut_aliquip_ex_ea_commodo_consequat_Duis_aute_irure_dolor_in_reprehenderit_in_voluptate_velit_esse_cillum_dolore_eu_fugiat_nulla_pariatur_Excepteur_sint_occaecat_cupidatat_non_proident_sunt_in_culpa_qui_officia_deserunt_mollit_anim_idest_laborum')
+            (1, 'ala_.')
         ]
         for reps, content in contents:
             source = positional_string_source_pipe(content)
             analyzer = LexicalAnalyzer(source)
             for i in range(reps):
                 analyzer.next_token()
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(InvalidTokenException):
                 analyzer.next_token()
+
+    def test_large_identifier_recognition(self):
+        """
+        Testing lexical analyzer behaviour on large identifier recognition.
+        """
+        content = 'Lorem_ipsum_dolor_sit_amet_consectetur_adipiscing_elit_sed_do_eiusmod_tempor_incididunt_ut_labore_et_dolore_magna_aliqua_Ut_enim_ad_minim_veniam_quis_nostrud_exercitation_ullamco_laboris_nisi_ut_aliquip_ex_ea_commodo_consequat_Duis_aute_irure_dolor_in_reprehenderit_in_voluptate_velit_esse_cillum_dolore_eu_fugiat_nulla_pariatur_Excepteur_sint_occaecat_cupidatat_non_proident_sunt_in_culpa_qui_officia_deserunt_mollit_anim_idest_laborum'
+        source = positional_string_source_pipe(content)
+        analyzer = LexicalAnalyzer(source)
+        with self.assertRaises(LargeIdentifierException):
+            analyzer.next_token()
 
     def test_keywords_recognition(self):
         """
@@ -212,8 +224,19 @@ class TestLexicalAnalyzer(unittest.TestCase):
         contents = [
             '"This is not closed string',
             '"This is not closed string ending with escape $',
-            '"This is not closed string ending with escaped quote $"',
-            """\"
+            '"This is not closed string ending with escaped quote $"'
+        ]
+        for content in contents:
+            source = positional_string_source_pipe(content)
+            analyzer = LexicalAnalyzer(source)
+            with self.assertRaises(InvalidStringException):
+                analyzer.next_token()
+
+    def test_large_string_recognition(self):
+        """
+        Tests lexical analyzer behaviour on large string recognition.
+        """
+        content = """\"
                 Summary of  $"The Old Man and the Sea$”
                 
                 The story revolves around the central character, Santiago. 
@@ -275,12 +298,10 @@ class TestLexicalAnalyzer(unittest.TestCase):
                 Some tourists that same day see the marlin’s skeleton and mistake it as a shark. 
                 Now in the shack, the old man goes back to his sleep and dreams of lions that he had seen in 
                 his youth when he was in Africa. (1)   \""""
-        ]
-        for content in contents:
-            source = positional_string_source_pipe(content)
-            analyzer = LexicalAnalyzer(source)
-            with self.assertRaises(RuntimeError):
-                analyzer.next_token()
+        source = positional_string_source_pipe(content)
+        analyzer = LexicalAnalyzer(source)
+        with self.assertRaises(LargeStringException):
+            analyzer.next_token()
 
     def test_valid_number_recognition(self):
         """
@@ -320,17 +341,17 @@ class TestLexicalAnalyzer(unittest.TestCase):
             - Too long decimal part.
         """
         contents = [
-            "042",
-            "42.a",
-            "42. ",
-            "42.",
-            "999999999999999999",
-            "1.9999999999999999"
+            ("042", InvalidNumberException),
+            ("42.a", InvalidNumberException),
+            ("42. ", InvalidNumberException),
+            ("42.", InvalidNumberException),
+            ("999999999999999999", LargeNumberException),
+            ("1.9999999999999999", LargeDecimalPartException)
         ]
-        for content in contents:
+        for content, exceptionType in contents:
             source = positional_string_source_pipe(content)
             analyzer = LexicalAnalyzer(source)
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(exceptionType):
                 analyzer.next_token()
 
     def test_small_valid_program_1(self):
