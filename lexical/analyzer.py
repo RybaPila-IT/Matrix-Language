@@ -1,6 +1,7 @@
 from tokens.token import Token
 from tokens.type import TokenType
 from tokens.table import TokenLookUpTable
+from lexical.exception import *
 
 
 class LexicalAnalyzer:
@@ -75,7 +76,7 @@ class LexicalAnalyzer:
             if try_build():
                 return self.token
 
-        raise RuntimeError('invalid identifier at position {}'.format(self.__position()))
+        raise InvalidTokenException(self.__position())
 
     def __try_build_identifier(self):
         if not self.__current_char().isalpha():
@@ -101,7 +102,7 @@ class LexicalAnalyzer:
         while self.__current_char().isalnum() or self.__current_char() == '_':
             identifier_chars.append(self.__current_char())
             if len(identifier_chars) == self.options['MAX_IDENTIFIER_LENGTH']:
-                raise RuntimeError('identifier starting at position {} is too long'.format(position))
+                raise LargeIdentifierException(position)
             self.__next_char()
 
         return ''.join(identifier_chars)
@@ -155,7 +156,7 @@ class LexicalAnalyzer:
         position = self.__position()
         self.__next_char()
         if self.__current_char().isdecimal():
-            raise RuntimeError('invalid zero-staring number at position {}'.format(position))
+            raise InvalidNumberException(position)
         if self.__current_char() == '.':
             number = self.__try_build_decimal_part()
         self.token = Token(
@@ -171,7 +172,7 @@ class LexicalAnalyzer:
         while self.__current_char().isdecimal():
             value = value * 10 + int(self.__current_char())
             if value >= self.options['MAX_NUMBER_VALUE']:
-                raise RuntimeError('overflow of the number starting at position {}'.format(position))
+                raise LargeNumberException(position)
             self.__next_char()
         if self.__current_char() == '.':
             value += self.__try_build_decimal_part()
@@ -193,12 +194,12 @@ class LexicalAnalyzer:
             value = value * 10 + int(self.__current_char())
 
             if decimal > self.options['MAX_DECIMAL_PRECISION']:
-                raise RuntimeError('too long decimal part starting at position {}'.format(position))
+                raise LargeDecimalPartException(position)
 
             self.__next_char()
 
         if decimal == 0:
-            raise RuntimeError('invalid decimal part starting at position {}'.format(position))
+            raise InvalidNumberException(position)
 
         return value / (10 ** decimal)
 
@@ -229,12 +230,12 @@ class LexicalAnalyzer:
                 self.__next_char()
             # We have reached the end of source without second quote sign.
             if self.__current_char() == '':
-                raise RuntimeError('invalid string (lack of ending) at position {}'.format(position))
+                raise InvalidStringException(position)
 
             string_chars.append(self.__current_char())
 
             if len(string_chars) > self.options['MAX_STRING_SIZE']:
-                raise RuntimeError('string starting at position {} is too long.'.format(position))
+                raise LargeStringException(position)
 
             self.__next_char()
         # Reading next char in order to maintain analyzer invariant.
