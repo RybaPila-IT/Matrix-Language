@@ -9,6 +9,9 @@ class RawFileSource:
     def next_char(self):
         return self.file.read(1)
 
+    def position(self):
+        return self.file.tell()
+
     def __del__(self):
         try:
             self.file.close()
@@ -23,10 +26,13 @@ class RawFileSource:
 class RawStringSource:
     def __init__(self, content: str):
         self.content = content
-        self.position = -1
+        self.pos = -1
+
+    def position(self):
+        return self.pos + 1
 
     def next_char(self):
-        self.position = min(self.position + 1, len(self.content))
-        return (self.content[self.position]
-                if self.position < len(self.content)
+        self.pos = min(self.pos + 1, len(self.content))
+        return (self.content[self.pos]
+                if self.pos < len(self.content)
                 else '')
