@@ -108,12 +108,10 @@ class LexicalAnalyzer:
         return ''.join(identifier_chars)
 
     def __try_build_inextensible_token(self):
-        # Refactor into get.
-        # With walrus operator.
-        if self.__current_char() not in TokenLookUpTable.inextensible:
+        if (found_token_type := TokenLookUpTable.inextensible.get(self.__current_char())) is None:
             return False
         self.token = Token(
-            token_type=TokenLookUpTable.inextensible[self.__current_char()],
+            token_type=found_token_type,
             value=self.__current_char(),
             position=self.__position()
         )
@@ -121,8 +119,7 @@ class LexicalAnalyzer:
         return True
 
     def __try_build_extensible_token(self):
-        #
-        if self.__current_char() not in TokenLookUpTable.extensible:
+        if (primary_token_type := TokenLookUpTable.extensible.get(self.__current_char())) is None:
             return False
         position = self.__position()
         prev_char = self.__current_char()
@@ -137,7 +134,7 @@ class LexicalAnalyzer:
             self.__next_char()
         else:
             self.token = Token(
-                token_type=TokenLookUpTable.extensible[prev_char],
+                token_type=primary_token_type,
                 value=prev_char,
                 position=position
             )
@@ -214,8 +211,6 @@ class LexicalAnalyzer:
             position=position
         )
         return True
-
-    # Add custom class of exception.
 
     def __try_read_string_content(self):
         # Omit starting quote sign.
