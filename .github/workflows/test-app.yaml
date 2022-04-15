@@ -2,7 +2,7 @@ name: Test Matrix-Language project
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ * ]
 
 permissions:
   contents: read
