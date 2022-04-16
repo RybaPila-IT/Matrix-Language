@@ -1,0 +1,220 @@
+class Program:
+    def __init__(self, functions_definitions):
+        self.functions_definitions = functions_definitions
+
+    def __repr__(self):
+        return str.format('Program:\nFunctions: {}\n', self.functions_definitions)
+
+
+class FunctionDefinition:
+    def __init__(self, identifier, parameters, statement_block):
+        self.identifier = identifier
+        self.parameters = parameters
+        self.statement_block = statement_block
+
+    def __repr__(self):
+        return str.format(
+            'Function: {}\n\tParameters: {}\n\t Statement Block: {}\n',
+            self.identifier,
+            self.parameters,
+            self.statement_block
+        )
+
+
+class StatementBlock:
+    def __init__(self, statements):
+        self.statements = statements
+
+    def __repr__(self):
+        return str.format('Statement block\n\tStatements: {}\n', self.statements)
+
+
+class IfStatement:
+    def __init__(self, condition, statement_block, else_statement_block=None):
+        self.condition = condition
+        self.statement_block = statement_block
+        self.else_statement_block = else_statement_block
+
+    def __repr__(self):
+        return str.format(
+            'IF statement\n\tCondition: {}\n\t Statement block: {}\n\t: Else statement block: {}\n',
+            self.condition,
+            self.statement_block,
+            self.else_statement_block
+        )
+
+
+class UntilStatement:
+    def __init__(self, condition, statement_block):
+        self.condition = condition
+        self.statement_block = statement_block
+
+    def __repr__(self):
+        return str.format(
+            'Until statement\n\tCondition: {}\n\tStatement block: {}\n',
+            self.condition,
+            self.statement_block
+        )
+
+
+class ReturnStatement:
+    def __init__(self, expression=None):
+        self.expression = expression
+
+    def __repr__(self):
+        str.format('Return statement\n\tExpression: {}\n', self.expression)
+
+
+class FunctionCall:
+    def __init__(self, identifier, arguments):
+        self.identifier = identifier
+        self.arguments = arguments
+
+    def __repr__(self):
+        return str.format(
+            'Function call\n\tIdentifier: {}\n\tArguments: {}\n',
+            self.identifier,
+            self.arguments
+        )
+
+
+class AssignStatement:
+    def __init__(self, identifier, expression, index_operator=None):
+        self.identifier = identifier
+        self.index_operator = index_operator
+        self.expression = expression
+
+    def __repr__(self):
+        return str.format(
+            'Assign statement\n\tIdentifier: {}\n\tIndex operator: {}\n\tExpression: {}\n',
+            self.identifier,
+            self.index_operator,
+            self.expression
+        )
+
+
+class IndexOperator:
+    def __init__(self, first_expression=None, second_expression=None):
+        # If expression is None, it means that ':' was used.
+        self.first_expression = first_expression
+        self.second_expression = second_expression
+
+    def __repr__(self):
+        return str.format(
+            'Index operator\n\tFirst expression: {}\n\tSecond expression: {}\n',
+            self.first_expression,
+            self.second_expression
+        )
+
+
+class AdditiveExpression:
+    def __init__(self, left_mul_expression, operator=None, right_mul_expression=None):
+        self.left_mul_expression = left_mul_expression
+        self.operator = operator
+        self.right_mul_expression = right_mul_expression
+
+    def __repr__(self):
+        return str.format(
+            '''Additive Expression\n\tLeft multiplicative expression: {}
+            \n\tOperator: {}\n\t Right multiplicative expression: {}\n''',
+            self.left_mul_expression,
+            self.operator,
+            self.right_mul_expression
+        )
+
+
+class MultiplicativeExpression:
+    def __init__(self,
+                 left_atomic_expression,
+                 operator=None,
+                 right_atomic_expression=None,
+                 negated=False):
+        self.left_atomic_expression = left_atomic_expression
+        self.operator = operator
+        self.right_atomic_expression = right_atomic_expression
+        self.negated = negated
+
+    def __repr__(self):
+        return str.format(
+            '''Multiplicative expression\n\tLeft atomic expression: {}\n\tOperator: {}
+            \n\tRight atomic expression: {}\n\tNegated: {}\n''',
+            self.left_atomic_expression,
+            self.operator,
+            self.right_atomic_expression,
+            self.negated
+        )
+
+
+class OrCondition:
+    def __init__(self, left_and_condition, right_and_condition=None):
+        self.left_and_condition = left_and_condition
+        self.right_and_condition = right_and_condition
+
+    def __repr__(self):
+        return str.format(
+            'OR Condition\n\tLeft AND condition: {}\n\tRight AND condition: {}\n',
+            self.left_and_condition,
+            self.right_and_condition
+        )
+
+
+class AndCondition:
+    def __init__(self, left_rel_condition, right_rel_condition):
+        self.left_rel_condition = left_rel_condition
+        self.right_rel_condition = right_rel_condition
+
+    def __repr__(self):
+        return str.format(
+            'AND Condition\n\tLeft relation condition: {}\n\tRight relation condition: {}\n',
+            self.left_rel_condition,
+            self.right_rel_condition
+        )
+
+
+class RelationCondition:
+    def __init__(self, left_atomic_condition, operator=None, right_atomic_condition=None):
+        self.left_atomic_condition = left_atomic_condition
+        self.operator = operator
+        self.right_atomic_condition = right_atomic_condition
+
+    def __repr__(self):
+        return str.format(
+            'Relation Condition\n\tLeft atomic condition: {}\n\tOperator: {}\n\tRight atomic condition: {}\n',
+            self.left_atomic_condition,
+            self.operator,
+            self.right_atomic_condition
+        )
+
+
+class MatrixLiteral:
+    def __init__(self, expression_rows):
+        # Expression rows is dictionary mapping:
+        # Row number --> expressions in this row.
+        self.expression_rows = expression_rows
+
+    def __repr__(self):
+        return str.format('Matrix Literal\n\tExpression rows: {}', self.expression_rows)
+
+
+class StringLiteral:
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return str.format('String Literal\n\tValue: {}\n', self.value)
+
+
+class NumberLiteral:
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return str.format('Number Literal\n\tValue: {}\n', self.value)
+
+
+class Variable:
+    def __init__(self, identifier):
+        self.identifier = identifier
+
+    def __repr__(self):
+        return str.format('Variable\n\tIdentifier: {}\n', self.identifier)
