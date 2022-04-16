@@ -218,3 +218,11 @@ class Identifier:
 
     def __repr__(self):
         return str.format('Identifier\n\tValue: {}\n', self.value)
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.value == other.value
+        return False
+
+    def __hash__(self):
+        return hash(self.value)

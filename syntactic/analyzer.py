@@ -1,5 +1,5 @@
 from syntax_tree.constructions import *
-from exception import *
+from syntactic.exception import *
 
 
 class SyntacticAnalyzer:
