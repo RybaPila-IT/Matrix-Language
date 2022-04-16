@@ -186,13 +186,16 @@ class RelationCondition:
 
 
 class MatrixLiteral:
-    def __init__(self, expression_rows):
-        # Expression rows is dictionary mapping:
-        # Row number --> expressions in this row.
-        self.expression_rows = expression_rows
+    def __init__(self, expressions, separators):
+        self.expressions = expressions
+        self.separators = separators
 
     def __repr__(self):
-        return str.format('Matrix Literal\n\tExpression rows: {}', self.expression_rows)
+        return str.format(
+            'Matrix Literal\n\tExpressions: {}\n\tSeparators: {}\n',
+            self.expressions,
+            self.separators
+        )
 
 
 class StringLiteral:

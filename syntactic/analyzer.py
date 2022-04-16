@@ -197,7 +197,39 @@ class SyntacticAnalyzer:
         return RelationCondition(negated, left_expression)
 
     def __try_parse_literal(self):
-        pass
+        if self.__is_token(TokenType.STRING):
+            literal = StringLiteral(self.__current_token_value())
+            self.__next_token()
+        elif self.__is_token(TokenType.NUMBER):
+            literal = NumberLiteral(self.__current_token_value())
+            self.__next_token()
+        else:
+            literal = self.__try_parse_matrix_literal()
+
+        return literal
+
+    def __try_parse_matrix_literal(self):
+        if not self.__is_token(TokenType.OPEN_SQUARE_BRACKET):
+            return None
+        # Consume opening '[' bracket.
+        self.__next_token()
+        if (expression := self.__try_parse_additive_expression()) is None:
+            raise UnexpectedTokenException(self.__current_token())
+        expressions = [expression]
+        separators = []
+        while self.__is_token(TokenType.COMMA) or self.__is_token(TokenType.SEMICOLON):
+            separators.append(self.__current_token_value())
+            self.__next_token()
+            if (expression := self.__try_parse_additive_expression()) is None:
+                # After the separator, there must be following expression.
+                raise UnexpectedTokenException(self.__current_token())
+            expressions.append(expression)
+        if not self.__is_token(TokenType.CLOSE_SQUARE_BRACKET):
+            raise MissingBracketException(TokenType.CLOSE_SQUARE_BRACKET, self.__current_token())
+        # Consume ']' in order to maintain invariant.
+        self.__next_token()
+
+        return MatrixLiteral(expressions, separators)
 
     def __current_token(self):
         return self.token
