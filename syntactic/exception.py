@@ -2,6 +2,12 @@ from tokens.token import Token
 from tokens.type import *
 
 
+class UnexpectedTokenException(Exception):
+    def __init__(self, token):
+        super(Exception, self).__init__()
+        self.token = token
+
+
 class TokenMismatchException(Exception):
     def __init__(self, expected, received):
         super(Exception, self).__init__()
@@ -37,7 +43,3 @@ class MissingIdentifierException(TokenMismatchException):
             position=received.position
         )
         super(TokenMismatchException, self).__init__(expected, received)
-
-
-
-

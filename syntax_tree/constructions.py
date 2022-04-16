@@ -108,39 +108,40 @@ class IndexOperator:
 
 
 class AdditiveExpression:
-    def __init__(self, left_mul_expression, operator=None, right_mul_expression=None):
-        self.left_mul_expression = left_mul_expression
-        self.operator = operator
-        self.right_mul_expression = right_mul_expression
+    def __init__(self, multiplicative_expressions, operators=None):
+        self.multiplicative_expressions = multiplicative_expressions
+        self.operators = operators
 
     def __repr__(self):
         return str.format(
-            '''Additive Expression\n\tLeft multiplicative expression: {}
-            \n\tOperator: {}\n\t Right multiplicative expression: {}\n''',
-            self.left_mul_expression,
-            self.operator,
-            self.right_mul_expression
+            'Additive Expression\n\tMultiplicative expression: {}\n\tOperators: {}\n',
+            self.multiplicative_expressions,
+            self.operators,
         )
 
 
 class MultiplicativeExpression:
-    def __init__(self,
-                 left_atomic_expression,
-                 operator=None,
-                 right_atomic_expression=None,
-                 negated=False):
-        self.left_atomic_expression = left_atomic_expression
-        self.operator = operator
-        self.right_atomic_expression = right_atomic_expression
+    def __init__(self, atomic_expressions, operators=None):
+        self.atomic_expressions = atomic_expressions
+        self.operators = operators
+
+    def __repr__(self):
+        return str.format(
+            'Multiplicative Expression\n\tAtomic expressions: {}\n\tOperators: {}\n',
+            self.atomic_expressions,
+            self.operators,
+        )
+
+
+class AtomicExpression:
+    def __init__(self, negated, atomic_term):
+        self.atomic_term = atomic_term
         self.negated = negated
 
     def __repr__(self):
         return str.format(
-            '''Multiplicative expression\n\tLeft atomic expression: {}\n\tOperator: {}
-            \n\tRight atomic expression: {}\n\tNegated: {}\n''',
-            self.left_atomic_expression,
-            self.operator,
-            self.right_atomic_expression,
+            'Atomic Expression\n\tAtomic term: {}\n\tNegated: {}\n',
+            self.atomic_term,
             self.negated
         )
 
