@@ -212,9 +212,17 @@ class NumberLiteral:
         return str.format('Number Literal\n\tValue: {}\n', self.value)
 
 
-class Variable:
-    def __init__(self, identifier):
-        self.identifier = identifier
+class Identifier:
+    def __init__(self, value):
+        self.value = value
 
     def __repr__(self):
-        return str.format('Variable\n\tIdentifier: {}\n', self.identifier)
+        return str.format('Identifier\n\tValue: {}\n', self.value)
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.value == other.value
+        return False
+
+    def __hash__(self):
+        return hash(self.value)
