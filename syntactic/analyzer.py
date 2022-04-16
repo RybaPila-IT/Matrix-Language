@@ -91,6 +91,7 @@ class SyntacticAnalyzer:
         operators = []
         while self.__is_token(TokenType.ADD) or self.__is_token(TokenType.MINUS):
             operators.append(self.__current_token_value())
+            self.__next_token()
             if (mul_expression := self.__try_parse_multiplicative_expression()) is None:
                 # After the operand, there must be a multiplicative expression.
                 raise UnexpectedTokenException(self.__current_token())
@@ -105,6 +106,7 @@ class SyntacticAnalyzer:
         operators = []
         while self.__is_token(TokenType.MULTIPLY) or self.__is_token(TokenType.DIVIDE):
             operators.append(self.__current_token_value())
+            self.__next_token()
             if (atomic_expression := self.__try_parse_atomic_expression()) is None:
                 # After the operand, there mus be an atomic expression.
                 raise UnexpectedTokenException(self.__current_token())
@@ -119,7 +121,7 @@ class SyntacticAnalyzer:
             self.__next_token()
 
         for try_parse in [self.__try_parse_identifier_or_function_call,
-                          self.__try_parse_or_condition,
+                          self.__try_parse_parenthesised_or_condition,
                           self.__try_parse_literal]:
             if (atomic_term := try_parse()) is not None:
                 return AtomicExpression(negated, atomic_term)
@@ -129,8 +131,70 @@ class SyntacticAnalyzer:
     def __try_parse_identifier_or_function_call(self):
         pass
 
+    def __try_parse_parenthesised_or_condition(self):
+        if not self.__is_token(TokenType.OPEN_ROUND_BRACKET):
+            return None
+        self.__next_token()
+        or_condition = self.__try_parse_or_condition()
+        if or_condition is None:
+            raise UnexpectedTokenException(self.__current_token())
+        if not self.__is_token(TokenType.CLOSE_ROUND_BRACKET):
+            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token())
+        # Consume ')' in order to maintain invariant.
+        self.__next_token()
+
+        return or_condition
+
     def __try_parse_or_condition(self):
-        pass
+        if (and_condition := self.__try_parse_and_condition()) is None:
+            return None
+        and_conditions = [and_condition]
+        while self.__is_token(TokenType.OR):
+            self.__next_token()
+            if (and_condition := self.__try_parse_and_condition()) is None:
+                # After the or operand, there mus be an and condition.
+                raise UnexpectedTokenException(self.__current_token())
+            and_conditions.append(and_condition)
+
+        return OrCondition(and_conditions)
+
+    def __try_parse_and_condition(self):
+        if (rel_condition := self.__try_parse_relation_condition()) is None:
+            return None
+        rel_conditions = [rel_condition]
+        while self.__is_token(TokenType.AND):
+            self.__next_token()
+            if (rel_condition := self.__try_parse_relation_condition()) is None:
+                # After the and operand, there mus be an relation condition.
+                raise UnexpectedTokenException(self.__current_token())
+            rel_conditions.append(rel_condition)
+
+        return AndCondition(rel_conditions)
+
+    def __try_parse_relation_condition(self):
+        negated = False
+        if self.__is_token(TokenType.NOT):
+            negated = True
+            self.__next_token()
+        if (left_expression := self.__try_parse_additive_expression()) is None:
+            raise UnexpectedTokenException(self.__current_token())
+        possible_token_types = [
+            TokenType.LESS,
+            TokenType.LESS_OR_EQUAL,
+            TokenType.GREATER,
+            TokenType.GREATER_OR_EQUAL,
+            TokenType.EQUAL,
+            TokenType.NOT_EQUAL
+        ]
+        for token_type in possible_token_types:
+            if self.__is_token(token_type):
+                operator = self.__current_token_value()
+                self.__next_token()
+                if (right_expression := self.__try_parse_additive_expression()) is None:
+                    raise UnexpectedTokenException(self.__current_token())
+                return RelationCondition(negated, left_expression, operator, right_expression)
+
+        return RelationCondition(negated, left_expression)
 
     def __try_parse_literal(self):
         pass

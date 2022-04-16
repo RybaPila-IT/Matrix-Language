@@ -147,43 +147,41 @@ class AtomicExpression:
 
 
 class OrCondition:
-    def __init__(self, left_and_condition, right_and_condition=None):
-        self.left_and_condition = left_and_condition
-        self.right_and_condition = right_and_condition
+    def __init__(self, and_conditions):
+        self.and_conditions = and_conditions
 
     def __repr__(self):
         return str.format(
-            'OR Condition\n\tLeft AND condition: {}\n\tRight AND condition: {}\n',
-            self.left_and_condition,
-            self.right_and_condition
+            'OR Condition\n\tAND conditions: {}\n',
+            self.and_conditions
         )
 
 
 class AndCondition:
-    def __init__(self, left_rel_condition, right_rel_condition):
-        self.left_rel_condition = left_rel_condition
-        self.right_rel_condition = right_rel_condition
+    def __init__(self, rel_conditions):
+        self.rel_conditions = rel_conditions
 
     def __repr__(self):
         return str.format(
-            'AND Condition\n\tLeft relation condition: {}\n\tRight relation condition: {}\n',
-            self.left_rel_condition,
-            self.right_rel_condition
+            'AND Condition\n\tRelation conditions: {}\n',
+            self.rel_conditions
         )
 
 
 class RelationCondition:
-    def __init__(self, left_atomic_condition, operator=None, right_atomic_condition=None):
-        self.left_atomic_condition = left_atomic_condition
+    def __init__(self, negated, left_expression, operator=None, right_expression=None):
+        self.negated = negated
+        self.left_expression = left_expression
         self.operator = operator
-        self.right_atomic_condition = right_atomic_condition
+        self.right_expression = right_expression
 
     def __repr__(self):
         return str.format(
-            'Relation Condition\n\tLeft atomic condition: {}\n\tOperator: {}\n\tRight atomic condition: {}\n',
-            self.left_atomic_condition,
+            'Relation Condition\n\tNegated: {}\n\tLeft expression: {}\n\tOperator: {}\n\tRight expression: {}\n',
+            self.negated,
+            self.left_expression,
             self.operator,
-            self.right_atomic_condition
+            self.right_expression
         )
 
 
