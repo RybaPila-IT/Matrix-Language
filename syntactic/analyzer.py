@@ -75,16 +75,8 @@ class SyntacticAnalyzer:
     def __try_parse_if_statement(self):
         if not self.__is_token(TokenType.IF):
             return None
-        if not self.__is_next_token(TokenType.OPEN_ROUND_BRACKET):
-            raise MissingBracketException(TokenType.OPEN_ROUND_BRACKET, self.__current_token())
-        # Consuming the '(' token.
         self.__next_token()
-        if (condition := self.__try_parse_or_condition()) is None:
-            raise UnexpectedTokenException(self.__current_token())
-        if not self.__is_token(TokenType.CLOSE_ROUND_BRACKET):
-            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token())
-        # Consuming the ')' token.
-        self.__next_token()
+        condition = self.__try_parse_mandatory_parenthesised_or_condition()
         if (statement_block := self.__try_parse_statement_block()) is None:
             raise UnexpectedTokenException(self.__current_token())
         if not self.__is_token(TokenType.ELSE):
@@ -100,7 +92,28 @@ class SyntacticAnalyzer:
         raise UnexpectedTokenException(self.__current_token())
 
     def __try_parse_until_statement(self):
-        pass
+        if not self.__is_token(TokenType.UNTIL):
+            return None
+        self.__next_token()
+        condition = self.__try_parse_mandatory_parenthesised_or_condition()
+        if (statement_block := self.__try_parse_statement_block()) is None:
+            raise UnexpectedTokenException(self.__current_token())
+
+        return UntilStatement(condition, statement_block)
+
+    def __try_parse_mandatory_parenthesised_or_condition(self):
+        if not self.__is_token(TokenType.OPEN_ROUND_BRACKET):
+            raise MissingBracketException(TokenType.OPEN_ROUND_BRACKET, self.__current_token())
+        # Consuming the '(' token.
+        self.__next_token()
+        if (condition := self.__try_parse_or_condition()) is None:
+            raise UnexpectedTokenException(self.__current_token())
+        if self.__is_token(TokenType.CLOSE_ROUND_BRACKET):
+            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token())
+        # Consuming the ')' token.
+        self.__next_token()
+
+        return condition
 
     def __try_parse_return_statement(self):
         if not self.__is_token(TokenType.RETURN):
