@@ -79,7 +79,7 @@ class FunctionCall:
 
 
 class AssignStatement:
-    def __init__(self, identifier, expression, index_operator=None):
+    def __init__(self, identifier, index_operator, expression):
         self.identifier = identifier
         self.index_operator = index_operator
         self.expression = expression
