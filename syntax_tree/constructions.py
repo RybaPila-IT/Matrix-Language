@@ -94,16 +94,15 @@ class AssignStatement:
 
 
 class IndexOperator:
-    def __init__(self, first_expression=None, second_expression=None):
-        # If expression is None, it means that ':' was used.
-        self.first_expression = first_expression
-        self.second_expression = second_expression
+    def __init__(self, first_selector, second_selector):
+        self.first_selector = first_selector
+        self.second_selector = second_selector
 
     def __repr__(self):
         return str.format(
-            'Index operator\n\tFirst expression: {}\n\tSecond expression: {}\n',
-            self.first_expression,
-            self.second_expression
+            'Index operator\n\tFirst selector: {}\n\tSecond selector: {}\n',
+            self.first_selector,
+            self.second_selector
         )
 
 
@@ -228,3 +227,11 @@ class Identifier:
 
     def __hash__(self):
         return hash(self.value)
+
+
+class DotsSelect:
+    def __int__(self):
+        pass
+
+    def __repr__(self):
+        return str.format('Dots Select\n')

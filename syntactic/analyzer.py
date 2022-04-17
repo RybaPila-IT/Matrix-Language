@@ -125,7 +125,23 @@ class SyntacticAnalyzer:
         return AssignStatement(identifier, index_operator, expression)
 
     def __try_parse_index_operator(self):
-        pass
+        if not self.__is_token_then_next(TokenType.OPEN_SQUARE_BRACKET):
+            return None
+        if (first_selector := self.__try_parse_selector()) is None:
+            raise UnexpectedTokenException(self.__current_token())
+        if not self.__is_token_then_next(TokenType.COMMA):
+            raise UnexpectedTokenException(self.__current_token())
+        if (second_selector := self.__try_parse_selector()) is None:
+            raise UnexpectedTokenException(self.__current_token())
+        if not self.__is_token_then_next(TokenType.CLOSE_SQUARE_BRACKET):
+            raise MissingBracketException(TokenType.CLOSE_SQUARE_BRACKET, self.__current_token())
+
+        return IndexOperator(first_selector, second_selector)
+
+    def __try_parse_selector(self):
+        if self.__is_token_then_next(TokenType.COLON):
+            return DotsSelect
+        return self.__try_parse_additive_expression()
 
     def __try_parse_additive_expression(self):
         if (mul_expression := self.__try_parse_multiplicative_expression()) is None:
