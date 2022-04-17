@@ -129,7 +129,34 @@ class SyntacticAnalyzer:
         raise UnexpectedTokenException(self.__current_token())
 
     def __try_parse_identifier_or_function_call(self):
-        pass
+        if not self.__is_token(TokenType.IDENTIFIER):
+            return None
+        identifier = self.__current_token_value()
+        # Consume current identifier value and check if we have the '(' token.
+        if not self.__is_next_token(TokenType.OPEN_ROUND_BRACKET):
+            return Identifier(identifier)
+        # Consume the '(' token.
+        self.__next_token()
+        args = self.__try_parse_arguments()
+        if not self.__is_token(TokenType.CLOSE_ROUND_BRACKET):
+            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token())
+        self.__next_token()
+
+        return FunctionCall(identifier, args)
+
+    def __try_parse_arguments(self):
+        if (expression := self.__try_parse_additive_expression()) is None:
+            return []
+        arguments = [expression]
+        while self.__is_token(TokenType.COMMA):
+            # Consuming the ',' token.
+            self.__next_token()
+            if (expression := self.__try_parse_additive_expression()) is None:
+                # After the comma, there must be an expression.
+                raise UnexpectedTokenException(self.__current_token())
+            arguments.append(expression)
+
+        return arguments
 
     def __try_parse_parenthesised_or_condition(self):
         if not self.__is_token(TokenType.OPEN_ROUND_BRACKET):
