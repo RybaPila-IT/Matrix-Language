@@ -103,7 +103,10 @@ class SyntacticAnalyzer:
         pass
 
     def __try_parse_return_statement(self):
-        pass
+        if not self.__is_token(TokenType.RETURN):
+            return None
+
+        return ReturnStatement(self.__try_parse_additive_expression())
 
     def __try_parse_assignment_or_function_call(self):
         pass
