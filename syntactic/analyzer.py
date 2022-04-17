@@ -73,7 +73,31 @@ class SyntacticAnalyzer:
         return StatementBlock(statements)
 
     def __try_parse_if_statement(self):
-        pass
+        if not self.__is_token(TokenType.IF):
+            return None
+        if not self.__is_next_token(TokenType.OPEN_ROUND_BRACKET):
+            raise MissingBracketException(TokenType.OPEN_ROUND_BRACKET, self.__current_token())
+        # Consuming the '(' token.
+        self.__next_token()
+        if (condition := self.__try_parse_or_condition()) is None:
+            raise UnexpectedTokenException(self.__current_token())
+        if not self.__is_token(TokenType.CLOSE_ROUND_BRACKET):
+            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token())
+        # Consuming the ')' token.
+        self.__next_token()
+        if (statement_block := self.__try_parse_statement_block()) is None:
+            raise UnexpectedTokenException(self.__current_token())
+        if not self.__is_token(TokenType.ELSE):
+            return IfStatement(condition, statement_block)
+        # Consuming 'else' token.
+        self.__next_token()
+        for try_parse in [self.__try_parse_statement_block,
+                          self.__try_parse_if_statement]:
+            if (else_statement := try_parse()) is not None:
+                return IfStatement(condition, statement_block, else_statement)
+
+        # After the 'else' statement the other statement must follow.
+        raise UnexpectedTokenException(self.__current_token())
 
     def __try_parse_until_statement(self):
         pass

@@ -30,17 +30,17 @@ class StatementBlock:
 
 
 class IfStatement:
-    def __init__(self, condition, statement_block, else_statement_block=None):
+    def __init__(self, condition, statement_block, else_statement=None):
         self.condition = condition
         self.statement_block = statement_block
-        self.else_statement_block = else_statement_block
+        self.else_statement = else_statement
 
     def __repr__(self):
         return str.format(
-            'IF statement\n\tCondition: {}\n\t Statement block: {}\n\t: Else statement block: {}\n',
+            'IF statement\n\tCondition: {}\n\t Statement block: {}\n\t: Else statement: {}\n',
             self.condition,
             self.statement_block,
-            self.else_statement_block
+            self.else_statement
         )
 
 
