@@ -204,6 +204,14 @@ class StringLiteral:
     def __repr__(self):
         return str.format('String Literal\n\tValue: {}\n', self.value)
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.value == other.value
+        return False
+
+    def __hash__(self):
+        return hash(self.value)
+
 
 class NumberLiteral:
     def __init__(self, value):
@@ -211,6 +219,14 @@ class NumberLiteral:
 
     def __repr__(self):
         return str.format('Number Literal\n\tValue: {}\n', self.value)
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.value == other.value
+        return False
+
+    def __hash__(self):
+        return hash(self.value)
 
 
 class Identifier:
@@ -235,3 +251,9 @@ class DotsSelect:
 
     def __repr__(self):
         return str.format('Dots Select\n')
+
+    def __eq__(self, other):
+        return type(other) is type(self)
+
+    def __hash__(self):
+        return hash(self)

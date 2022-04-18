@@ -55,6 +55,32 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             # noinspection PyUnresolvedReferences
             parser._SyntacticAnalyzer__try_parse_parameters()
 
+    def test_simple_literals_parsing(self):
+        """
+        Testing string and number literals parsing by syntactic analyzer.
+
+        Test cases are:
+            - No valid literal.
+            - String literal.
+            - Number literal.
+        """
+        contents = [
+            'main()',
+            '"$"My string$""',
+            '1234'
+        ]
+        expected_constructions = [
+            None,
+            StringLiteral('"My string"'),
+            NumberLiteral(1234)
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_literal()
+            self.assertEqual(result, expected)
+
 
 if __name__ == '__main__':
     unittest.main()
