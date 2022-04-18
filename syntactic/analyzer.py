@@ -155,7 +155,8 @@ class SyntacticAnalyzer:
                 raise UnexpectedTokenException(self.__current_token())
             mul_expressions.append(mul_expression)
 
-        return AdditiveExpression(mul_expressions, operators)
+        return mul_expression if len(mul_expressions) == 1 \
+            else AdditiveExpression(mul_expressions, operators)
 
     def __try_parse_multiplicative_expression(self):
         if (atomic_expression := self.__try_parse_atomic_expression()) is None:
@@ -169,7 +170,8 @@ class SyntacticAnalyzer:
                 raise UnexpectedTokenException(self.__current_token())
             atomic_expressions.append(atomic_expression)
 
-        return MultiplicativeExpression(atomic_expressions, operators)
+        return atomic_expression if len(atomic_expressions) == 1 else \
+            MultiplicativeExpression(atomic_expressions, operators)
 
     def __try_parse_atomic_expression(self):
         negated = False
@@ -229,7 +231,8 @@ class SyntacticAnalyzer:
                 raise UnexpectedTokenException(self.__current_token())
             and_conditions.append(and_condition)
 
-        return OrCondition(and_conditions)
+        return and_condition if len(and_conditions) == 1 \
+            else OrCondition(and_conditions)
 
     def __try_parse_and_condition(self):
         if (rel_condition := self.__try_parse_relation_condition()) is None:
@@ -241,7 +244,8 @@ class SyntacticAnalyzer:
                 raise UnexpectedTokenException(self.__current_token())
             rel_conditions.append(rel_condition)
 
-        return AndCondition(rel_conditions)
+        return rel_condition if len(rel_conditions) == 1 \
+            else AndCondition(rel_conditions)
 
     def __try_parse_relation_condition(self):
         negated = False
