@@ -150,6 +150,80 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_relation_condition()
 
+    def test_and_condition_parsing(self):
+        """
+        Testing and conditions parsing by syntactic analyzer.
+
+        Test cases are:
+            - a
+            - a and b and c
+            - (a+b > 0) and (12 >= 12)
+            - (a and b) and c and d
+        """
+        contents = [
+            'a',
+            'a and b and c',
+            '(a+b > 0) and (12 >= 12)',
+            '(a and b) and c and d'
+        ]
+        expected_constructions = [
+            Identifier('a'),
+            AndCondition([
+                Identifier('a'),
+                Identifier('b'),
+                Identifier('c')
+            ]),
+            AndCondition([
+               RelationCondition(
+                   False,
+                   AdditiveExpression([Identifier('a'), Identifier('b')], ['+']),
+                   '>',
+                   NumberLiteral(0)
+               ),
+               RelationCondition(
+                   False,
+                   NumberLiteral(12),
+                   '>=',
+                   NumberLiteral(12)
+               )
+            ]),
+            AndCondition([
+                AndCondition([
+                    Identifier('a'),
+                    Identifier('b')
+                ]),
+                Identifier('c'),
+                Identifier('d')
+            ])
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_and_condition()
+            self.assertEqual(expected, result)
+
+    def test_invalid_and_condition_parsing(self):
+        """
+        Testing invalid and conditions parsing by syntactic analyzer.
+
+        Test cases are:
+            - if (1 > 2) {return false} and 12
+            - a and b and
+            - a and if (1 > 2) {return false} and c
+        """
+        contents = [
+            'if (1 > 2) {return false} and 12',
+            'a and b and',
+            'a and if (1 > 2) {return false} and c',
+        ]
+        # Starting the test.
+        for content in contents:
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(UnexpectedTokenException):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_and_condition()
+
 
 if __name__ == '__main__':
     unittest.main()
