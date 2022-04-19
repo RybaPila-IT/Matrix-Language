@@ -490,6 +490,80 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_additive_expression()
 
+    def test_matrix_literal_parsing(self):
+        """
+        Testing matrix literals parsing by syntactic analyzer.
+
+        Test cases are:
+            - [ 1 ]
+            - [ 1, 2; 3, 4 ]
+            - [ 1 + 2; a * c ]
+        """
+        contents = [
+            '[ 1 ]',
+            '[ 1, 2; 3, 4 ]',
+            '[ 1 + 2; a * c ]'
+        ]
+        expected_constructions = [
+            # Test 1.
+            MatrixLiteral([
+                NumberLiteral(1)
+            ], []),
+            # Test 2.
+            MatrixLiteral([
+                NumberLiteral(1),
+                NumberLiteral(2),
+                NumberLiteral(3),
+                NumberLiteral(4)
+            ], [',', ';', ',']),
+            # Test 3.
+            MatrixLiteral([
+                AdditiveExpression([
+                    NumberLiteral(1),
+                    NumberLiteral(2)
+                ], ['+']),
+                MultiplicativeExpression([
+                    Identifier('a'),
+                    Identifier('c')
+                ], ['*'])
+            ], [';'])
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_matrix_literal()
+            self.assertEqual(expected, result)
+
+    def test_invalid_matrix_literal_parsing(self):
+        """
+        Testing invalid matrix literals parsing by syntactic analyzer.
+
+        Test cases are:
+            - [1; a
+            - [ {a}, b ]
+            - [ a; : ]
+            - [ a; ]
+        """
+        contents = [
+            '[1; a ',
+            '[ {a}, b ] ',
+            '[ a; : ]',
+            '[ a; ]'
+        ]
+        errors = [
+            MissingBracketException,
+            UnexpectedTokenException,
+            UnexpectedTokenException,
+            UnexpectedTokenException
+        ]
+        # Starting the test.
+        for content, error in zip(contents, errors):
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(error):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_matrix_literal()
+
 
 if __name__ == '__main__':
     unittest.main()

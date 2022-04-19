@@ -166,7 +166,7 @@ class SyntacticAnalyzer:
         while self.__is_token(TokenType.MULTIPLY) or self.__is_token(TokenType.DIVIDE):
             operators.append(self.__current_token_value_then_next())
             if (atomic_expression := self.__try_parse_atomic_expression()) is None:
-                # After the '*' or '/' operand there mus be an atomic expression.
+                # After the '*' or '/' operand there must be an atomic expression.
                 raise UnexpectedTokenException(self.__current_token())
             atomic_expressions.append(atomic_expression)
 
@@ -241,7 +241,7 @@ class SyntacticAnalyzer:
         rel_conditions = [rel_condition]
         while self.__is_token_then_next(TokenType.AND):
             if (rel_condition := self.__try_parse_relation_condition()) is None:
-                # After the and operand, there mus be an relation condition.
+                # After the and operand, there must be an relation condition.
                 raise UnexpectedTokenException(self.__current_token())
             rel_conditions.append(rel_condition)
 
