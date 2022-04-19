@@ -298,6 +298,53 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_or_condition()
 
+    def test_atomic_expression_parsing(self):
+        """
+        Testing atomic expressions parsing by syntactic analyzer.
+
+        Test cases are:
+            - a
+            - - a
+            - - (-a)
+        """
+        contents = [
+            'a',
+            '- a',
+            '- (-a)'
+        ]
+        expected_constructions = [
+            Identifier('a'),
+            NegatedAtomicExpression(Identifier('a')),
+            NegatedAtomicExpression(NegatedAtomicExpression(Identifier('a')))
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_atomic_expression()
+            self.assertEqual(expected, result)
+
+    def test_invalid_atomic_condition_parsing(self):
+        """
+        Testing invalid atomic expressions parsing by syntactic analyzer.
+
+        Test cases are:
+            - - if (1 >2) {return false}
+            - - -a
+            - -({a})
+        """
+        contents = [
+            '- if (1 > 2) {return false}',
+            '- - a',
+            '-({a})',
+        ]
+        # Starting the test.
+        for content in contents:
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(UnexpectedTokenException):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_atomic_expression()
+
 
 if __name__ == '__main__':
     unittest.main()
