@@ -886,6 +886,73 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_if_statement()
 
+    def test_until_statement_parsing(self):
+        """
+         Testing until statement parsing by syntactic analyzer.
+
+         Test cases are:
+             - until (a <= 12) {a = a + 1}
+             - until (a and c) {a = fun(a)}
+         """
+        contents = [
+            'until (a <= 12) {a = a + 1}',
+            'until (a and c) {a = fun(a)}',
+        ]
+        expected_constructions = [
+            # Test 1.
+            UntilStatement(
+                RelationCondition(False, Identifier('a'), '<=', NumberLiteral(12)),
+                StatementBlock([
+                    AssignStatement('a', None, AdditiveExpression([Identifier('a'), NumberLiteral(1)], ['+']))
+                ])
+            ),
+            # Test 2.
+            UntilStatement(
+                AndCondition([Identifier('a'), Identifier('c')]),
+                StatementBlock([
+                    AssignStatement('a', None, FunctionCall('fun', [Identifier('a')]))
+                ])
+            ),
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_until_statement()
+            self.assertEqual(expected, result)
+
+    def test_invalid_until_statement_parsing(self):
+        """
+          Testing invalid until statement parsing by syntactic analyzer.
+
+          Test cases are:
+              - until () {a = a + 1}
+              - until (a>b {a = a + 1}
+              - until (a>b) a = a + 1
+              - until (a>b) {a++}
+              - until (if (a>b)) {a = a + 1}
+          """
+        contents = [
+            'until () {a = a + 1}',
+            'until (a>b {a = a + 1}',
+            'until (a>b) a = a + 1',
+            'until (a>b) {a++}',
+            'until (if (a>b)) {a = a + 1}'
+        ]
+        errors = [
+            UnexpectedTokenException,
+            MissingBracketException,
+            UnexpectedTokenException,
+            UnexpectedTokenException,
+            UnexpectedTokenException
+        ]
+        # Starting the test.
+        for content, error in zip(contents, errors):
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(error):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_until_statement()
+
 
 if __name__ == '__main__':
     unittest.main()
