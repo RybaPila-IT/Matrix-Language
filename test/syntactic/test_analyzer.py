@@ -411,6 +411,85 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_multiplicative_expression()
 
+    def test_additive_expression_parsing(self):
+        """
+        Testing additive expressions parsing by syntactic analyzer.
+
+        Test cases are:
+            - a
+            - a + b - c
+            - (a + (a - b)) - c + 12
+            - (a*b) + c/d
+        """
+        contents = [
+            'a',
+            'a + b - c',
+            '(a + (a - b)) - c + 12',
+            '(a*b) + c/d'
+        ]
+        expected_constructions = [
+            # Test 1.
+            Identifier('a'),
+            # Test 2.
+            AdditiveExpression([
+                Identifier('a'),
+                Identifier('b'),
+                Identifier('c')
+            ], ['+', '-']),
+            # Test 3.
+            AdditiveExpression([
+                AdditiveExpression([
+                    Identifier('a'),
+                    AdditiveExpression([
+                        Identifier('a'),
+                        Identifier('b')
+                    ], ['-'])
+                ], ['+']),
+                Identifier('c'),
+                NumberLiteral(12)
+            ], ['-', '+']),
+            # Test 4.
+            AdditiveExpression([
+                MultiplicativeExpression([
+                    Identifier('a'),
+                    Identifier('b')
+                ], ['*']),
+                MultiplicativeExpression([
+                    Identifier('c'),
+                    Identifier('d')
+                ], ['/'])
+            ], ['+'])
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_additive_expression()
+            self.assertEqual(expected, result)
+
+    def test_invalid_additive_expression_parsing(self):
+        """
+        Testing invalid additive expressions parsing by syntactic analyzer.
+
+        Test cases are:
+            - + 12
+            - 12 -
+            - (12 + ) - 34
+            - 34 + (if (1 > 2) {return false})
+        """
+        contents = [
+            '+ 12',
+            '12 -',
+            '(12 + ) - 34',
+            '34 + (if (1 > 2) {return false})'
+        ]
+        # Starting the test.
+        for content in contents:
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(UnexpectedTokenException):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_additive_expression()
+
 
 if __name__ == '__main__':
     unittest.main()
