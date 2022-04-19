@@ -101,6 +101,16 @@ class AssignStatement:
             self.expression
         )
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.identifier == other.identifier and \
+                   self.index_operator == other.index_operator and \
+                   self.expression == other.expression
+        return False
+
+    def __hash__(self):
+        return hash((self.identifier, self.index_operator, self.expression))
+
 
 class IndexOperator:
     def __init__(self, first_selector, second_selector):

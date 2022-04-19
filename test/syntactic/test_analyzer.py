@@ -174,18 +174,18 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 Identifier('c')
             ]),
             AndCondition([
-               RelationCondition(
-                   False,
-                   AdditiveExpression([Identifier('a'), Identifier('b')], ['+']),
-                   '>',
-                   NumberLiteral(0)
-               ),
-               RelationCondition(
-                   False,
-                   NumberLiteral(12),
-                   '>=',
-                   NumberLiteral(12)
-               )
+                RelationCondition(
+                    False,
+                    AdditiveExpression([Identifier('a'), Identifier('b')], ['+']),
+                    '>',
+                    NumberLiteral(0)
+                ),
+                RelationCondition(
+                    False,
+                    NumberLiteral(12),
+                    '>=',
+                    NumberLiteral(12)
+                )
             ]),
             AndCondition([
                 AndCondition([
@@ -248,18 +248,18 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 Identifier('c')
             ]),
             OrCondition([
-               RelationCondition(
-                   False,
-                   AdditiveExpression([Identifier('a'), Identifier('b')], ['+']),
-                   '>',
-                   NumberLiteral(0)
-               ),
-               RelationCondition(
-                   False,
-                   NumberLiteral(12),
-                   '>=',
-                   NumberLiteral(12)
-               )
+                RelationCondition(
+                    False,
+                    AdditiveExpression([Identifier('a'), Identifier('b')], ['+']),
+                    '>',
+                    NumberLiteral(0)
+                ),
+                RelationCondition(
+                    False,
+                    NumberLiteral(12),
+                    '>=',
+                    NumberLiteral(12)
+                )
             ]),
             OrCondition([
                 OrCondition([
@@ -695,6 +695,78 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             with self.assertRaises(UnexpectedTokenException):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_identifier_or_function_call()
+
+    def test_assign_statement_parsing(self):
+        """
+        Testing assign statements parsing by syntactic analyzer.
+
+        Test cases are:
+            - a = 12
+            - a = a + 1
+            - a = fun(12)
+            - a[0, :] = [1, 2, 3]
+        """
+        contents = [
+            'a = 12',
+            'a = a + 1',
+            'a = fun(12)',
+            'a[0, :] = [1, 2, 3]'
+        ]
+        expected_constructions = [
+            # Test 1.
+            AssignStatement('a', None,
+                            NumberLiteral(12)
+                            ),
+            # Test 2.
+            AssignStatement('a', None,
+                            AdditiveExpression(
+                                [Identifier('a'), NumberLiteral(1)],
+                                ['+']
+                            )
+                            ),
+            # Test 3.
+            AssignStatement('a', None,
+                            FunctionCall(
+                                'fun',
+                                [NumberLiteral(12)]
+                            )
+                            ),
+            # Test 4.
+            AssignStatement('a',
+                            IndexOperator(NumberLiteral(0), DotsSelect()),
+                            MatrixLiteral(
+                                [NumberLiteral(1), NumberLiteral(2), NumberLiteral(3)],
+                                [',', ',']
+                            )
+                            )
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_assignment_or_function_call()
+            self.assertEqual(expected, result)
+
+    def test_invalid_assign_statement_parsing(self):
+        """
+          Testing invalid assign statement parsing by syntactic analyzer.
+
+          Test cases are:
+              - a+b = 1
+              - a = if (1>2) {return false}
+              - a = :
+          """
+        contents = [
+            'a+b = 1',
+            'a = if (1>2) {return false}',
+            'a = :',
+        ]
+        # Starting the test.
+        for content in contents:
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(UnexpectedTokenException):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_assignment_or_function_call()
 
 
 if __name__ == '__main__':
