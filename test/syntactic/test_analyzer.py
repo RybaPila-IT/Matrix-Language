@@ -797,6 +797,95 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             result = parser._SyntacticAnalyzer__try_parse_return_statement()
             self.assertEqual(expected, result)
 
+    def test_if_statement_parsing(self):
+        """
+        Testing if statement parsing by syntactic analyzer.
+
+        Test cases are:
+            - if (1>2) {return 0}
+            - if (a and c) {return 0} else {return 1}
+            - if (a or c) {return 0} else if (2 > 1) {return 1} else {return a}
+        """
+        contents = [
+            'if (1>2) {return 0}',
+            'if (a and c) {return 0} else {return 1}',
+            'if (a or c) {return 0} else if (! 2 > 1) {return 1} else {return a}',
+        ]
+        expected_constructions = [
+            # Test 1.
+            IfStatement(
+                RelationCondition(False, NumberLiteral(1), '>', NumberLiteral(2)),
+                StatementBlock([
+                    ReturnStatement(NumberLiteral(0))
+                ])
+            ),
+            # Test 2.
+            IfStatement(
+                AndCondition([Identifier('a'), Identifier('c')]),
+                StatementBlock([
+                    ReturnStatement(NumberLiteral(0)),
+                ]),
+                StatementBlock([
+                    ReturnStatement(NumberLiteral(1)),
+                ]),
+            ),
+            # Test 3.
+            IfStatement(
+                OrCondition([Identifier('a'), Identifier('c')]),
+                StatementBlock([
+                    ReturnStatement(NumberLiteral(0)),
+                ]),
+                IfStatement(
+                    RelationCondition(True, NumberLiteral(2), '>', NumberLiteral(1)),
+                    StatementBlock([
+                        ReturnStatement(NumberLiteral(1)),
+                    ]),
+                    StatementBlock([
+                        ReturnStatement(Identifier('a')),
+                    ]),
+                )
+
+            )
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_if_statement()
+            self.assertEqual(expected, result)
+
+    def test_invalid_if_statement_parsing(self):
+        """
+          Testing invalid if statement parsing by syntactic analyzer.
+
+          Test cases are:
+              - if () {return 0}
+              - if (a>b {return 0}
+              - if (a>b) return 0
+              - if (a>b) {a++}
+              - if (if (a>b)) {return 0}
+          """
+        contents = [
+            'if () {return 0}',
+            'if (a>b {return 0}',
+            'if (a>b) return 0',
+            'if (a>b) {a++}',
+            'if (if (a>b)) {return 0}'
+        ]
+        errors = [
+            UnexpectedTokenException,
+            MissingBracketException,
+            UnexpectedTokenException,
+            UnexpectedTokenException,
+            UnexpectedTokenException
+        ]
+        # Starting the test.
+        for content, error in zip(contents, errors):
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(error):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_if_statement()
+
 
 if __name__ == '__main__':
     unittest.main()

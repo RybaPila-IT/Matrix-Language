@@ -54,11 +54,14 @@ class SyntacticAnalyzer:
                               self.__try_parse_return_statement,
                               self.__try_parse_assignment_or_function_call,
                               self.__try_parse_statement_block]:
-                if (result := try_parse()) is None:
-                    # Here we are sure, that some statement must be present,
-                    # but in reality is not.
-                    raise UnexpectedTokenException(self.__current_token())
-                statements.append(result)
+                if (result := try_parse()) is not None:
+                    break
+
+            if result is None:
+                raise UnexpectedTokenException(self.__current_token())
+
+            statements.append(result)
+
         # The '}' is already consumed by the '__is_token_then_next' method.
         return StatementBlock(statements)
 

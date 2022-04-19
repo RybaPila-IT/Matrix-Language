@@ -107,7 +107,7 @@ class ReturnStatement:
         self.expression = expression
 
     def __repr__(self):
-        str.format('Return statement\n\tExpression: {}\n', self.expression)
+        return str.format('Return statement\n\tExpression: {}\n', self.expression)
 
     def __eq__(self, other):
         if type(other) is type(self):
