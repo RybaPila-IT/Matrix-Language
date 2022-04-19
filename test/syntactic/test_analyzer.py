@@ -1013,6 +1013,108 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_statement_block()
 
+    def test_function_definition_parsing_1(self):
+        """
+        Testing function definition parsing by syntactic analyzer vol. 1.
+        """
+        content = """
+            main() {
+                i = 0
+                until (i < 10) {
+                    i = i + 1
+                }
+                print("i = ", i)
+            }
+        """
+        expected = FunctionDefinition('main', [],
+                                      StatementBlock([
+                                          AssignStatement('i', None, NumberLiteral(0)),
+                                          UntilStatement(
+                                              RelationCondition(False, Identifier('i'), '<', NumberLiteral(10)),
+                                              StatementBlock([
+                                                  AssignStatement('i', None, AdditiveExpression([
+                                                      Identifier('i'),
+                                                      NumberLiteral(1)
+                                                  ], ['+'])),
+                                              ]),
+                                          ),
+                                          FunctionCall('print', [StringLiteral('i = '), Identifier('i')])
+                                      ]))
+        # Starting the test.
+        parser = syntactic_analyzer_pipeline(content)
+        # noinspection PyUnresolvedReferences
+        result = parser._SyntacticAnalyzer__try_parse_function_definition()
+        self.assertEqual(expected, result)
+
+    def test_function_definition_parsing_2(self):
+        """
+        Testing function definition parsing by syntactic analyzer vol. 2.
+        """
+        content = """
+            fib(n) {
+                if (n == 1) {
+                    return 1
+                } 
+                return fib(n-1)
+            }
+        """
+        expected = FunctionDefinition('fib', [Identifier('n')],
+                                      StatementBlock([
+                                          IfStatement(
+                                              RelationCondition(False, Identifier('n'), '==', NumberLiteral(1)),
+                                              StatementBlock([
+                                                  ReturnStatement(NumberLiteral(1))
+                                              ]),
+                                          ),
+                                          ReturnStatement(
+                                              FunctionCall('fib', [
+                                                  AdditiveExpression([
+                                                      Identifier('n'),
+                                                      NumberLiteral(1)], ['-'])
+                                              ])
+                                          )
+                                      ]))
+        # Starting the test.
+        parser = syntactic_analyzer_pipeline(content)
+        # noinspection PyUnresolvedReferences
+        result = parser._SyntacticAnalyzer__try_parse_function_definition()
+        self.assertEqual(expected, result)
+
+    def test_function_definition_parsing_3(self):
+        """
+        Testing function definition parsing by syntactic analyzer vol. 3.
+        """
+        content = """
+                    rot90(matrix) {
+                        rot = [  0, 1;
+                                -1, 0 ]
+                        return matrix * rot
+                    }
+                """
+        expected = FunctionDefinition('rot90', [Identifier('matrix')],
+                                      StatementBlock([
+                                          AssignStatement(
+                                              'rot',
+                                              None,
+                                              MatrixLiteral([
+                                                  NumberLiteral(0),
+                                                  NumberLiteral(1),
+                                                  NegatedAtomicExpression(NumberLiteral(1)),
+                                                  NumberLiteral(0)
+                                              ], [',', ';', ','])
+                                          ),
+                                          ReturnStatement(
+                                              MultiplicativeExpression([
+                                                  Identifier('matrix'),
+                                                  Identifier('rot')], ['*'])
+                                          )
+                                      ]))
+        # Starting the test.
+        parser = syntactic_analyzer_pipeline(content)
+        # noinspection PyUnresolvedReferences
+        result = parser._SyntacticAnalyzer__try_parse_function_definition()
+        self.assertEqual(expected, result)
+
 
 if __name__ == '__main__':
     unittest.main()
