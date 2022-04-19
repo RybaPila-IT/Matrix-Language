@@ -393,13 +393,11 @@ class TestSyntacticAnalyzer(unittest.TestCase):
         Testing invalid multiplicative expressions parsing by syntactic analyzer.
 
         Test cases are:
-            - * 12
             - 12 *
             - (12 * ) / 34
             - 34 * (if (1 > 2) {return false})
         """
         contents = [
-            '* 12',
             '12 *',
             '(12 * ) / 34',
             '34 * (if (1 > 2) {return false})'
@@ -472,13 +470,11 @@ class TestSyntacticAnalyzer(unittest.TestCase):
         Testing invalid additive expressions parsing by syntactic analyzer.
 
         Test cases are:
-            - + 12
             - 12 -
             - (12 + ) - 34
             - 34 + (if (1 > 2) {return false})
         """
         contents = [
-            '+ 12',
             '12 -',
             '(12 + ) - 34',
             '34 + (if (1 > 2) {return false})'
@@ -639,6 +635,66 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             with self.assertRaises(error):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_index_operator()
+
+    def test_function_call_parsing(self):
+        """
+        Testing function calls parsing by syntactic analyzer.
+
+        Test cases are:
+            - main()
+            - fun(a, 1, "hello")
+            - fun(a+b, [ 1; 2 ], fun(1))
+        """
+        contents = [
+            'main()',
+            'fun(a, 1, "hello")',
+            'fun(a+b, [ 1; 2 ], fun(1))',
+        ]
+        expected_constructions = [
+            # Test 1.
+            FunctionCall('main', []),
+            # Test 2.
+            FunctionCall('fun', [
+                Identifier('a'),
+                NumberLiteral(1),
+                StringLiteral('hello')
+            ]),
+            # Test 3.
+            FunctionCall('fun', [
+                AdditiveExpression([Identifier('a'), Identifier('b')], ['+']),
+                MatrixLiteral([NumberLiteral(1), NumberLiteral(2)], [';']),
+                FunctionCall('fun', [NumberLiteral(1)])
+            ])
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_identifier_or_function_call()
+            self.assertEqual(expected, result)
+
+    def test_invalid_function_call_parsing(self):
+        """
+         Testing invalid function call parsing by syntactic analyzer.
+
+         Test cases are:
+             - main(
+             - main(1,)
+             - main(until)
+             - main(:)
+         """
+        contents = [
+            'main(',
+            'main(1,)',
+            'main(until)',
+            'main(:)',
+        ]
+        # Starting the test.
+        for content in contents:
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(UnexpectedTokenException):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_identifier_or_function_call()
 
 
 if __name__ == '__main__':

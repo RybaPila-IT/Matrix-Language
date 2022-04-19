@@ -77,6 +77,15 @@ class FunctionCall:
             self.arguments
         )
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.identifier == other.identifier and \
+                   self.arguments == other.arguments
+        return False
+
+    def __hash__(self):
+        return hash((self.identifier, self.arguments))
+
 
 class AssignStatement:
     def __init__(self, identifier, index_operator, expression):

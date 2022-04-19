@@ -184,8 +184,12 @@ class SyntacticAnalyzer:
             if (atomic_expression := try_parse()) is not None:
                 return NegatedAtomicExpression(atomic_expression) if negated \
                     else atomic_expression
-        # If we were unable to parse atomic expression, it means an error at this point.
-        raise UnexpectedTokenException(self.__current_token())
+        # If we have read the negation sign, but were unable to parse anything,
+        # it means an error.
+        if negated:
+            raise UnexpectedTokenException(self.__current_token())
+
+        return None
 
     def __try_parse_identifier_or_function_call(self):
         if not self.__is_token(TokenType.IDENTIFIER):
@@ -201,8 +205,10 @@ class SyntacticAnalyzer:
         return FunctionCall(identifier, args)
 
     def __try_parse_arguments(self):
-        if (expression := self.__try_parse_additive_expression()) is None:
+        if self.__is_token(TokenType.CLOSE_ROUND_BRACKET):
             return []
+        if (expression := self.__try_parse_additive_expression()) is None:
+            raise UnexpectedTokenException(self.__current_token())
         arguments = [expression]
         while self.__is_token_then_next(TokenType.COMMA):
             if (expression := self.__try_parse_additive_expression()) is None:
