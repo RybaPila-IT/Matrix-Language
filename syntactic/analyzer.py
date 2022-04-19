@@ -148,7 +148,7 @@ class SyntacticAnalyzer:
             return None
         mul_expressions = [mul_expression]
         operators = []
-        while self.__is_token(TokenType.ADD) or self.__is_token(TokenType.MINUS):
+        while self.__is_token(TokenType.PLUS) or self.__is_token(TokenType.MINUS):
             operators.append(self.__current_token_value_then_next())
             if (mul_expression := self.__try_parse_multiplicative_expression()) is None:
                 # After '+' or '-' operand there must be a multiplicative expression.
@@ -181,9 +181,10 @@ class SyntacticAnalyzer:
         for try_parse in [self.__try_parse_identifier_or_function_call,
                           self.__try_parse_parenthesised_or_condition,
                           self.__try_parse_literal]:
-            if (atomic_term := try_parse()) is not None:
-                return AtomicExpression(negated, atomic_term)
-        # If nwe were unable to parse atomic expression, it means an error at this point.
+            if (atomic_expression := try_parse()) is not None:
+                return NegatedAtomicExpression(atomic_expression) if negated \
+                    else atomic_expression
+        # If we were unable to parse atomic expression, it means an error at this point.
         raise UnexpectedTokenException(self.__current_token())
 
     def __try_parse_identifier_or_function_call(self):
@@ -268,7 +269,8 @@ class SyntacticAnalyzer:
                     raise UnexpectedTokenException(self.__current_token())
                 return RelationCondition(negated, left_expression, operator, right_expression)
 
-        return RelationCondition(negated, left_expression)
+        return RelationCondition(negated, left_expression) if negated \
+            else left_expression
 
     def __try_parse_literal(self):
         if self.__is_token(TokenType.STRING):

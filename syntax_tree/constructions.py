@@ -118,6 +118,15 @@ class AdditiveExpression:
             self.operators,
         )
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.multiplicative_expressions == other.multiplicative_expressions and \
+                   self.operators == other.operators
+        return False
+
+    def __hash__(self):
+        return hash((self.multiplicative_expressions, self.operators))
+
 
 class MultiplicativeExpression:
     def __init__(self, atomic_expressions, operators=None):
@@ -131,18 +140,33 @@ class MultiplicativeExpression:
             self.operators,
         )
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.atomic_expressions == other.atomic_expressions and \
+                   self.operators == other.operators
+        return False
 
-class AtomicExpression:
-    def __init__(self, negated, atomic_term):
-        self.atomic_term = atomic_term
-        self.negated = negated
+    def __hash__(self):
+        return hash((self.atomic_expressions, self.operators))
+
+
+class NegatedAtomicExpression:
+    def __init__(self, atomic_expression):
+        self.atomic_expression = atomic_expression
 
     def __repr__(self):
         return str.format(
-            'Atomic Expression\n\tAtomic term: {}\n\tNegated: {}\n',
-            self.atomic_term,
-            self.negated
+            'Negated Atomic Expression\n\tAtomic expression: {}\n',
+            self.atomic_expression,
         )
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.atomic_expression == other.atomic_expression
+        return False
+
+    def __hash__(self):
+        return hash(self.atomic_expression)
 
 
 class OrCondition:
@@ -155,6 +179,14 @@ class OrCondition:
             self.and_conditions
         )
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.and_conditions == other.and_conditions
+        return False
+
+    def __hash__(self):
+        return hash(self.and_conditions)
+
 
 class AndCondition:
     def __init__(self, rel_conditions):
@@ -165,6 +197,14 @@ class AndCondition:
             'AND Condition\n\tRelation conditions: {}\n',
             self.rel_conditions
         )
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.rel_conditions == other.rel_conditions
+        return False
+
+    def __hash__(self):
+        return hash(self.rel_conditions)
 
 
 class RelationCondition:
@@ -183,6 +223,17 @@ class RelationCondition:
             self.right_expression
         )
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.negated == other.negated and \
+                   self.left_expression == other.left_expression and \
+                   self.operator == other.operator and \
+                   self.right_expression == other.right_expression
+        return False
+
+    def __hash__(self):
+        return hash((self.negated, self.left_expression, self.operator, self.right_expression))
+
 
 class MatrixLiteral:
     def __init__(self, expressions, separators):
@@ -195,6 +246,15 @@ class MatrixLiteral:
             self.expressions,
             self.separators
         )
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.expressions == other.expressions and \
+                   self.separators == other.separators
+        return False
+
+    def __hash__(self):
+        return hash((self.expressions, self.separators))
 
 
 class StringLiteral:

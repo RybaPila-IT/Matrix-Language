@@ -40,7 +40,7 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             parser = syntactic_analyzer_pipeline(content)
             # noinspection PyUnresolvedReferences
             result = parser._SyntacticAnalyzer__try_parse_parameters()
-            self.assertEqual(result, expected)
+            self.assertEqual(expected, result)
 
     def test_invalid_parameters_parsing(self):
         """
@@ -79,7 +79,76 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             parser = syntactic_analyzer_pipeline(content)
             # noinspection PyUnresolvedReferences
             result = parser._SyntacticAnalyzer__try_parse_literal()
-            self.assertEqual(result, expected)
+            self.assertEqual(expected, result)
+
+    def test_relation_condition_parsing(self):
+        """
+        Testing relation conditions parsing by syntactic analyzer.
+
+        Test cases are:
+            - a
+            - ! a
+            - a <= b
+            - ! (a+20) >= (b*d)
+        """
+        contents = [
+            'a',
+            '! a',
+            'a <= b',
+            '! (a+20) >= (b*d)',
+        ]
+        expected_constructions = [
+            Identifier('a'),
+            RelationCondition(
+                True,
+                Identifier('a')
+            ),
+            RelationCondition(
+                False,
+                Identifier('a'),
+                '<=',
+                Identifier('b')
+            ),
+            RelationCondition(
+                True,
+                AdditiveExpression(
+                    [Identifier('a'), NumberLiteral(20)],
+                    ['+']
+                ),
+                '>=',
+                MultiplicativeExpression(
+                    [Identifier('b'), Identifier('d')],
+                    ['*']
+                )
+            )
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_relation_condition()
+            self.assertEqual(expected, result)
+
+    def test_invalid_relation_condition_parsing(self):
+        """
+        Testing invalid relation conditions parsing by syntactic analyzer.
+
+        Test cases are:
+            - !! a
+            - <= a
+            - a == :
+        """
+        contents = [
+            '!! a',
+            '<= a',
+            'a == :',
+        ]
+        # Starting the test.
+        for content in contents:
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(UnexpectedTokenException):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_relation_condition()
 
 
 if __name__ == '__main__':
