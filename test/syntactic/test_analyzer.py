@@ -953,6 +953,66 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_until_statement()
 
+    def test_statement_block_parsing(self):
+        """
+         Testing statement block parsing by syntactic analyzer.
+
+         Test cases are:
+             - { { {} } }
+             - { a = a + 1 n = fun(a) }
+             - { until (a <= 12) {a = a + 1} }
+         """
+        contents = [
+            '{ { {} } }',
+            '{ a = a + 1 n = fun(a) }',
+            '{ until (a <= 12) {a = a + 1} }'
+        ]
+        expected_constructions = [
+            # Test 1.
+            StatementBlock([StatementBlock([StatementBlock([])])]),
+            # Test 2.
+            StatementBlock([
+                AssignStatement('a', None, AdditiveExpression([Identifier('a'), NumberLiteral(1)], ['+'])),
+                AssignStatement('n', None, FunctionCall('fun', [Identifier('a')]))
+            ]),
+            # Test 3.
+            StatementBlock([
+                UntilStatement(
+                    RelationCondition(False, Identifier('a'), '<=', NumberLiteral(12)),
+                    StatementBlock([
+                        AssignStatement('a', None, AdditiveExpression([Identifier('a'), NumberLiteral(1)], ['+']))
+                    ])
+                ),
+            ])
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_statement_block()
+            self.assertEqual(expected, result)
+
+    def test_invalid_statement_block_parsing(self):
+        """
+          Testing invalid statement block parsing by syntactic analyzer.
+
+          Test cases are:
+              - { { { } }
+              - {a++}
+              - { -() }
+          """
+        contents = [
+            '{ { { } }',
+            '{a++}',
+            '{ -() }',
+        ]
+        # Starting the test.
+        for content in contents:
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(UnexpectedTokenException):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_statement_block()
+
 
 if __name__ == '__main__':
     unittest.main()
