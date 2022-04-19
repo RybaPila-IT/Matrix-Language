@@ -140,7 +140,7 @@ class SyntacticAnalyzer:
 
     def __try_parse_selector(self):
         if self.__is_token_then_next(TokenType.COLON):
-            return DotsSelect
+            return DotsSelect()
         return self.__try_parse_additive_expression()
 
     def __try_parse_additive_expression(self):

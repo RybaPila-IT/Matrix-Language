@@ -564,6 +564,82 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_matrix_literal()
 
+    def test_index_operator_parsing(self):
+        """
+        Testing index operators parsing by syntactic analyzer.
+
+        Test cases are:
+            - [ 0, 0 ]
+            - [ a + b, c * d]
+            - [ :, :]
+        """
+        contents = [
+            '[ 0, 0 ]',
+            '[ a + b, c * d ]',
+            '[ :, : ]'
+        ]
+        expected_constructions = [
+            # Test 1.
+            IndexOperator(
+                NumberLiteral(0),
+                NumberLiteral(0)
+            ),
+            # Test 2.
+            IndexOperator(
+                AdditiveExpression([
+                    Identifier('a'),
+                    Identifier('b')
+                ], ['+']),
+                MultiplicativeExpression([
+                    Identifier('c'),
+                    Identifier('d')
+                ], ['*'])
+            ),
+            # Test 3.
+            IndexOperator(
+                DotsSelect(),
+                DotsSelect()
+            )
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_index_operator()
+            self.assertEqual(expected, result)
+
+    def test_invalid_index_operator_parsing(self):
+        """
+         Testing invalid index operators parsing by syntactic analyzer.
+
+         Test cases are:
+             - [1, ]
+             - [ 1 1 ]
+             - [1, 1
+             - [ {1}, 1 ]
+             - [ : , :, : ]
+         """
+        contents = [
+            '[1, ]',
+            '[ 1 1 ]',
+            '[1, 1',
+            '[ {1}, 1 ]',
+            '[ : , :, : ]'
+        ]
+        errors = [
+            UnexpectedTokenException,
+            UnexpectedTokenException,
+            MissingBracketException,
+            UnexpectedTokenException,
+            MissingBracketException
+        ]
+        # Starting the test.
+        for content, error in zip(contents, errors):
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(error):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_index_operator()
+
 
 if __name__ == '__main__':
     unittest.main()
