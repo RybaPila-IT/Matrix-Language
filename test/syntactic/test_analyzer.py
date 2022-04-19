@@ -324,7 +324,7 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             result = parser._SyntacticAnalyzer__try_parse_atomic_expression()
             self.assertEqual(expected, result)
 
-    def test_invalid_atomic_condition_parsing(self):
+    def test_invalid_atomic_expression_parsing(self):
         """
         Testing invalid atomic expressions parsing by syntactic analyzer.
 
@@ -344,6 +344,72 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             with self.assertRaises(UnexpectedTokenException):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_atomic_expression()
+
+    def test_multiplicative_expression_parsing(self):
+        """
+        Testing multiplicative expressions parsing by syntactic analyzer.
+
+        Test cases are:
+            - a
+            - a * b / c
+            - (a * (a / b)) * c / 12
+        """
+        contents = [
+            'a',
+            'a * b / c',
+            '(a * (a / b)) * c / 12'
+        ]
+        expected_constructions = [
+            # Test 1.
+            Identifier('a'),
+            # Test 2.
+            MultiplicativeExpression([
+                Identifier('a'),
+                Identifier('b'),
+                Identifier('c')
+            ], ['*', '/']),
+            # Test 3.
+            MultiplicativeExpression([
+                MultiplicativeExpression([
+                    Identifier('a'),
+                    MultiplicativeExpression([
+                        Identifier('a'),
+                        Identifier('b')
+                    ], ['/'])
+                ], ['*']),
+                Identifier('c'),
+                NumberLiteral(12)
+            ], ['*', '/'])
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_multiplicative_expression()
+            self.assertEqual(expected, result)
+
+    def test_invalid_multiplicative_expression_parsing(self):
+        """
+        Testing invalid multiplicative expressions parsing by syntactic analyzer.
+
+        Test cases are:
+            - * 12
+            - 12 *
+            - (12 * ) / 34
+            - 34 * (if (1 > 2) {return false})
+        """
+        contents = [
+            '* 12',
+            '12 *',
+            '(12 * ) / 34',
+            '34 * (if (1 > 2) {return false})'
+        ]
+        # Starting the test.
+        for content in contents:
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(UnexpectedTokenException):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_multiplicative_expression()
 
 
 if __name__ == '__main__':
