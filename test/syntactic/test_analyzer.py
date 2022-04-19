@@ -224,6 +224,80 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_and_condition()
 
+    def test_or_condition_parsing(self):
+        """
+        Testing or conditions parsing by syntactic analyzer.
+
+        Test cases are:
+            - a
+            - a or b or c
+            - (a+b > 0) or (12 >= 12)
+            - (a or b) or c or d
+        """
+        contents = [
+            'a',
+            'a or b or c',
+            '(a+b > 0) or (12 >= 12)',
+            '(a or b) or c or d'
+        ]
+        expected_constructions = [
+            Identifier('a'),
+            OrCondition([
+                Identifier('a'),
+                Identifier('b'),
+                Identifier('c')
+            ]),
+            OrCondition([
+               RelationCondition(
+                   False,
+                   AdditiveExpression([Identifier('a'), Identifier('b')], ['+']),
+                   '>',
+                   NumberLiteral(0)
+               ),
+               RelationCondition(
+                   False,
+                   NumberLiteral(12),
+                   '>=',
+                   NumberLiteral(12)
+               )
+            ]),
+            OrCondition([
+                OrCondition([
+                    Identifier('a'),
+                    Identifier('b')
+                ]),
+                Identifier('c'),
+                Identifier('d')
+            ])
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_or_condition()
+            self.assertEqual(expected, result)
+
+    def test_invalid_or_condition_parsing(self):
+        """
+        Testing invalid or conditions parsing by syntactic analyzer.
+
+        Test cases are:
+            - if (1 > 2) {return false} or 12
+            - a or b or
+            - a or if (1 > 2) {return false} or c
+        """
+        contents = [
+            'if (1 > 2) {return false} or 12',
+            'a or b or',
+            'a or if (1 > 2) {return false} or c',
+        ]
+        # Starting the test.
+        for content in contents:
+            parser = syntactic_analyzer_pipeline(content)
+            with self.assertRaises(UnexpectedTokenException):
+                # noinspection PyUnresolvedReferences
+                parser._SyntacticAnalyzer__try_parse_or_condition()
+
 
 if __name__ == '__main__':
     unittest.main()
