@@ -5,6 +5,14 @@ class Program:
     def __repr__(self):
         return str.format('Program:\nFunctions: {}\n', self.functions_definitions)
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.functions_definitions == other.functions_definitions
+        return False
+
+    def __hash__(self):
+        return hash(self.functions_definitions)
+
 
 class FunctionDefinition:
     def __init__(self, identifier, parameters, statement_block):
@@ -20,6 +28,16 @@ class FunctionDefinition:
             self.statement_block
         )
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.identifier == other.identifier and \
+                   self.parameters == other.parameters and \
+                   self.statement_block == other.statement_block
+        return False
+
+    def __hash__(self):
+        return hash((self.identifier, self.parameters, self.statement_block))
+
 
 class StatementBlock:
     def __init__(self, statements):
@@ -27,6 +45,14 @@ class StatementBlock:
 
     def __repr__(self):
         return str.format('Statement block\n\tStatements: {}\n', self.statements)
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.statements == other.statements
+        return False
+
+    def __hash__(self):
+        return hash(self.statements)
 
 
 class IfStatement:
@@ -43,6 +69,16 @@ class IfStatement:
             self.else_statement
         )
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.condition == other.condition and \
+                   self.statement_block == other.statement_block and \
+                   self.else_statement == other.else_statement
+        return False
+
+    def __hash__(self):
+        return hash((self.condition, self.statement_block, self.else_statement))
+
 
 class UntilStatement:
     def __init__(self, condition, statement_block):
@@ -56,6 +92,15 @@ class UntilStatement:
             self.statement_block
         )
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.condition == other.condition and \
+                   self.statement_block == other.statement_block
+        return False
+
+    def __hash__(self):
+        return hash((self.condition, self.statement_block))
+
 
 class ReturnStatement:
     def __init__(self, expression=None):
@@ -63,6 +108,14 @@ class ReturnStatement:
 
     def __repr__(self):
         str.format('Return statement\n\tExpression: {}\n', self.expression)
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.expression == other.expression
+        return False
+
+    def __hash__(self):
+        return hash(self.expression)
 
 
 class FunctionCall:

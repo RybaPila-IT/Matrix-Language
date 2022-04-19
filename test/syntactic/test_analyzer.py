@@ -768,6 +768,35 @@ class TestSyntacticAnalyzer(unittest.TestCase):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_assignment_or_function_call()
 
+    def test_return_statement_parsing(self):
+        """
+        Testing return statement parsing by syntactic analyzer.
+
+        Test cases are:
+            - return
+            - return fun(1)
+            - return a + b
+        """
+        contents = [
+            'return',
+            'return fun(1)',
+            'return a + b',
+        ]
+        expected_constructions = [
+            # Test 1.
+            ReturnStatement(),
+            # Test 2.
+            ReturnStatement(FunctionCall('fun', [NumberLiteral(1)])),
+            # Test 3.
+            ReturnStatement(AdditiveExpression([Identifier('a'), Identifier('b')], ['+']))
+        ]
+        # Starting the test.
+        for content, expected in zip(contents, expected_constructions):
+            parser = syntactic_analyzer_pipeline(content)
+            # noinspection PyUnresolvedReferences
+            result = parser._SyntacticAnalyzer__try_parse_return_statement()
+            self.assertEqual(expected, result)
+
 
 if __name__ == '__main__':
     unittest.main()
