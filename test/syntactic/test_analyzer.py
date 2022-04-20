@@ -135,18 +135,18 @@ class TestSyntacticAnalyzer(unittest.TestCase):
 
         Test cases are:
             - !! a
-            - <= a
+            - a < ! a
             - a == :
         """
         contents = [
             '!! a',
-            '<= a',
+            ' a < ! a'
             'a == :',
         ]
         # Starting the test.
         for content in contents:
             parser = syntactic_analyzer_pipeline(content)
-            with self.assertRaises(UnexpectedTokenException):
+            with self.assertRaises(MissingExpressionException):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_relation_condition()
 
@@ -208,19 +208,17 @@ class TestSyntacticAnalyzer(unittest.TestCase):
         Testing invalid and conditions parsing by syntactic analyzer.
 
         Test cases are:
-            - if (1 > 2) {return false} and 12
             - a and b and
             - a and if (1 > 2) {return false} and c
         """
         contents = [
-            'if (1 > 2) {return false} and 12',
             'a and b and',
             'a and if (1 > 2) {return false} and c',
         ]
         # Starting the test.
         for content in contents:
             parser = syntactic_analyzer_pipeline(content)
-            with self.assertRaises(UnexpectedTokenException):
+            with self.assertRaises(MissingConditionException):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_and_condition()
 
@@ -282,19 +280,17 @@ class TestSyntacticAnalyzer(unittest.TestCase):
         Testing invalid or conditions parsing by syntactic analyzer.
 
         Test cases are:
-            - if (1 > 2) {return false} or 12
             - a or b or
             - a or if (1 > 2) {return false} or c
         """
         contents = [
-            'if (1 > 2) {return false} or 12',
             'a or b or',
             'a or if (1 > 2) {return false} or c',
         ]
         # Starting the test.
         for content in contents:
             parser = syntactic_analyzer_pipeline(content)
-            with self.assertRaises(UnexpectedTokenException):
+            with self.assertRaises(MissingConditionException):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_or_condition()
 
@@ -338,10 +334,15 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             '- - a',
             '-({a})',
         ]
+        errors = [
+            MissingExpressionException,
+            MissingExpressionException,
+            MissingConditionException
+        ]
         # Starting the test.
-        for content in contents:
+        for content, error in zip(contents, errors):
             parser = syntactic_analyzer_pipeline(content)
-            with self.assertRaises(UnexpectedTokenException):
+            with self.assertRaises(error):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_atomic_expression()
 
@@ -402,10 +403,15 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             '(12 * ) / 34',
             '34 * (if (1 > 2) {return false})'
         ]
+        errors = [
+            MissingExpressionException,
+            MissingExpressionException,
+            MissingConditionException
+        ]
         # Starting the test.
-        for content in contents:
+        for content, error in zip(contents, errors):
             parser = syntactic_analyzer_pipeline(content)
-            with self.assertRaises(UnexpectedTokenException):
+            with self.assertRaises(error):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_multiplicative_expression()
 
@@ -479,10 +485,15 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             '(12 + ) - 34',
             '34 + (if (1 > 2) {return false})'
         ]
+        errors = [
+            MissingExpressionException,
+            MissingExpressionException,
+            MissingConditionException
+        ]
         # Starting the test.
-        for content in contents:
+        for content, error in zip(contents, errors):
             parser = syntactic_analyzer_pipeline(content)
-            with self.assertRaises(UnexpectedTokenException):
+            with self.assertRaises(error):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_additive_expression()
 
@@ -549,9 +560,9 @@ class TestSyntacticAnalyzer(unittest.TestCase):
         ]
         errors = [
             MissingBracketException,
-            UnexpectedTokenException,
-            UnexpectedTokenException,
-            UnexpectedTokenException
+            MissingExpressionException,
+            MissingExpressionException,
+            MissingExpressionException
         ]
         # Starting the test.
         for content, error in zip(contents, errors):
@@ -623,10 +634,10 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             '[ : , :, : ]'
         ]
         errors = [
-            UnexpectedTokenException,
+            MissingSelectorException,
             UnexpectedTokenException,
             MissingBracketException,
-            UnexpectedTokenException,
+            MissingSelectorException,
             MissingBracketException
         ]
         # Starting the test.
@@ -689,10 +700,16 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             'main(until)',
             'main(:)',
         ]
+        errors = [
+            MissingBracketException,
+            MissingExpressionException,
+            MissingBracketException,
+            MissingBracketException
+        ]
         # Starting the test.
-        for content in contents:
+        for content, error in zip(contents, errors):
             parser = syntactic_analyzer_pipeline(content)
-            with self.assertRaises(UnexpectedTokenException):
+            with self.assertRaises(error):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_identifier_or_function_call()
 
@@ -761,10 +778,15 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             'a = if (1>2) {return false}',
             'a = :',
         ]
+        errors = [
+            UnexpectedTokenException,
+            MissingExpressionException,
+            MissingExpressionException
+        ]
         # Starting the test.
-        for content in contents:
+        for content, error in zip(contents, errors):
             parser = syntactic_analyzer_pipeline(content)
-            with self.assertRaises(UnexpectedTokenException):
+            with self.assertRaises(error):
                 # noinspection PyUnresolvedReferences
                 parser._SyntacticAnalyzer__try_parse_assignment_or_function_call()
 
@@ -873,11 +895,11 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             'if (if (a>b)) {return 0}'
         ]
         errors = [
-            UnexpectedTokenException,
+            MissingConditionException,
             MissingBracketException,
+            MissingStatementBlockException,
             UnexpectedTokenException,
-            UnexpectedTokenException,
-            UnexpectedTokenException
+            MissingConditionException
         ]
         # Starting the test.
         for content, error in zip(contents, errors):
@@ -940,11 +962,11 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             'until (if (a>b)) {a = a + 1}'
         ]
         errors = [
-            UnexpectedTokenException,
+            MissingConditionException,
             MissingBracketException,
+            MissingStatementBlockException,
             UnexpectedTokenException,
-            UnexpectedTokenException,
-            UnexpectedTokenException
+            MissingConditionException
         ]
         # Starting the test.
         for content, error in zip(contents, errors):

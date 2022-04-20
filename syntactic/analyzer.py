@@ -213,10 +213,7 @@ class SyntacticAnalyzer:
             MultiplicativeExpression(atomic_expressions, operators)
 
     def __try_parse_atomic_expression(self):
-        negated = False
-        if self.__is_token_then_next(TokenType.MINUS):
-            negated = True
-
+        negated = self.__is_token_then_next(TokenType.MINUS)
         for try_parse in [self.__try_parse_identifier_or_function_call,
                           self.__try_parse_parenthesised_or_condition,
                           self.__try_parse_literal]:
@@ -234,7 +231,6 @@ class SyntacticAnalyzer:
         if not self.__is_token(TokenType.IDENTIFIER):
             return None
         identifier = self.__current_token_value_then_next()
-        # Consume current identifier value and check if we have the '(' token.
         if not self.__is_token_then_next(TokenType.OPEN_ROUND_BRACKET):
             return Identifier(identifier)
         args = self.__try_parse_arguments()
@@ -289,13 +285,11 @@ class SyntacticAnalyzer:
             else AndCondition(rel_conditions)
 
     def __try_parse_relation_condition(self):
-        # Erase redundant if statement.
-        negated = False
-        if self.__is_token_then_next(TokenType.NOT):
-            negated = True
-        # Error: If negated then error, else None.
+        negated = self.__is_token_then_next(TokenType.NOT)
         if (left_expression := self.__try_parse_additive_expression()) is None:
-            raise UnexpectedTokenException(self.__current_token())
+            if negated:
+                raise MissingExpressionException(self.__current_token(), Sc.RelationCondition)
+            return None
         possible_token_types = [
             TokenType.LESS,
             TokenType.LESS_OR_EQUAL,
