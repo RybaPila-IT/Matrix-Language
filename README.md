@@ -38,7 +38,6 @@ statementBlock  =  "{" {
                         statementBlock
                     } "}"
 
-
 returnStatement     = "return" [ addExpression ]
 ifStatement         = "if" "(" orCondition ")" statementBlock
                       [ "else" ( ifStatement | statementBlock ) ]
@@ -62,7 +61,6 @@ relCondition        = ["!"] addExpression [ relOperator addExpression ]
 
 literal             = matrixLiteral | numberLiteral | string
 matrixLiteral       = "[" addExpression { ( "," | ";" ) addExpression } "]"
-
 
 numberLiteral = (0|[1-9][0-9]*)(.[0-9]*)?
 identifier    = [a-zA-z][a-zA-Z0-9_-]*
