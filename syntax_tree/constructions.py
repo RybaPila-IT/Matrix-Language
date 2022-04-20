@@ -371,19 +371,19 @@ class NumberLiteral:
 
 
 class Identifier:
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, name):
+        self.name = name
 
     def __repr__(self):
-        return str.format('Identifier\n\tValue: {}\n', self.value)
+        return str.format('Identifier\n\tName: {}\n', self.name)
 
     def __eq__(self, other):
         if type(other) is type(self):
-            return self.value == other.value
+            return self.name == other.name
         return False
 
     def __hash__(self):
-        return hash(self.value)
+        return hash(self.name)
 
 
 class DotsSelect:

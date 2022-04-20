@@ -1,3 +1,4 @@
+from syntactic.context import SyntacticContext as Sc
 from syntax_tree.constructions import *
 from syntactic.exception import *
 
@@ -49,6 +50,8 @@ class SyntacticAnalyzer:
         """
         functions_definitions = {}
         while (new_func_def := self.__try_parse_function_definition()) is not None:
+            if new_func_def.identifier in functions_definitions:
+                raise FunctionDuplicationException(new_func_def.identifier)
             functions_definitions[new_func_def.identifier] = new_func_def
 
         return Program(functions_definitions)
@@ -58,12 +61,12 @@ class SyntacticAnalyzer:
             return None
         identifier = self.__current_token_value_then_next()
         if not self.__is_token_then_next(TokenType.OPEN_ROUND_BRACKET):
-            raise MissingBracketException(TokenType.OPEN_ROUND_BRACKET, self.__current_token())
+            raise MissingBracketException(TokenType.OPEN_ROUND_BRACKET, self.__current_token(), Sc.FunctionDefinition)
         parameters = self.__try_parse_parameters()
         if not self.__is_token_then_next(TokenType.CLOSE_ROUND_BRACKET):
-            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token())
+            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token(), Sc.FunctionDefinition)
         if (statement_block := self.__try_parse_statement_block()) is None:
-            raise MissingBracketException(TokenType.OPEN_CURLY_BRACKET, self.__current_token())
+            raise MissingStatementBlockException(self.__current_token(), Sc.FunctionDefinition)
 
         return FunctionDefinition(identifier, parameters, statement_block)
 
@@ -74,7 +77,7 @@ class SyntacticAnalyzer:
         while self.__is_token_then_next(TokenType.COMMA):
             # Since the ',' sign appeared, the identifier must follow.
             if not self.__is_token(TokenType.IDENTIFIER):
-                raise MissingIdentifierException(self.__current_token())
+                raise MissingIdentifierException(self.__current_token(), Sc.Parameters)
             identifiers.append(Identifier(self.__current_token_value_then_next()))
 
         return identifiers
@@ -105,7 +108,7 @@ class SyntacticAnalyzer:
             return None
         condition = self.__try_parse_mandatory_parenthesised_or_condition()
         if (statement_block := self.__try_parse_statement_block()) is None:
-            raise UnexpectedTokenException(self.__current_token())
+            raise MissingStatementBlockException(self.__current_token(), Sc.IfStatement)
         if not self.__is_token_then_next(TokenType.ELSE):
             return IfStatement(condition, statement_block)
         for try_parse in [self.__try_parse_statement_block,
@@ -114,25 +117,25 @@ class SyntacticAnalyzer:
                 return IfStatement(condition, statement_block, else_statement)
 
         # After the 'else' constant the statement must follow.
-        raise UnexpectedTokenException(self.__current_token())
+        raise MissingElseStatementException(self.__current_token(), Sc.IfStatement)
 
     def __try_parse_until_statement(self):
         if not self.__is_token_then_next(TokenType.UNTIL):
             return None
         condition = self.__try_parse_mandatory_parenthesised_or_condition()
         if (statement_block := self.__try_parse_statement_block()) is None:
-            raise UnexpectedTokenException(self.__current_token())
+            raise MissingStatementBlockException(self.__current_token(), Sc.UntilStatement)
 
         return UntilStatement(condition, statement_block)
 
     def __try_parse_mandatory_parenthesised_or_condition(self):
         if not self.__is_token_then_next(TokenType.OPEN_ROUND_BRACKET):
             # The or condition is mandatory, so the '(' token must be present.
-            raise MissingBracketException(TokenType.OPEN_ROUND_BRACKET, self.__current_token())
+            raise MissingBracketException(TokenType.OPEN_ROUND_BRACKET, self.__current_token(), Sc.OrCondition)
         if (condition := self.__try_parse_or_condition()) is None:
-            raise UnexpectedTokenException(self.__current_token())
+            raise MissingConditionException(self.__current_token(), Sc.OrCondition)
         if not self.__is_token_then_next(TokenType.CLOSE_ROUND_BRACKET):
-            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token())
+            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token(), Sc.OrCondition)
 
         return condition
 
@@ -150,7 +153,7 @@ class SyntacticAnalyzer:
             # Here we know, that we are parsing function call.
             arguments = self.__try_parse_arguments()
             if not self.__is_token_then_next(TokenType.CLOSE_ROUND_BRACKET):
-                raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token())
+                raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token(), Sc.FunctionCall)
 
             return FunctionCall(identifier, arguments)
         # Here we know, that we are parsing assignment statement.
@@ -158,7 +161,7 @@ class SyntacticAnalyzer:
         if not self.__is_token_then_next(TokenType.ASSIGNMENT):
             raise UnexpectedTokenException(self.__current_token())
         if (expression := self.__try_parse_additive_expression()) is None:
-            raise UnexpectedTokenException(self.__current_token())
+            raise MissingExpressionException(self.__current_token(), Sc.Assignment)
 
         return AssignStatement(identifier, index_operator, expression)
 
@@ -166,13 +169,13 @@ class SyntacticAnalyzer:
         if not self.__is_token_then_next(TokenType.OPEN_SQUARE_BRACKET):
             return None
         if (first_selector := self.__try_parse_selector()) is None:
-            raise UnexpectedTokenException(self.__current_token())
+            raise MissingSelectorException(self.__current_token(), Sc.IndexOperator)
         if not self.__is_token_then_next(TokenType.COMMA):
             raise UnexpectedTokenException(self.__current_token())
         if (second_selector := self.__try_parse_selector()) is None:
-            raise UnexpectedTokenException(self.__current_token())
+            raise MissingSelectorException(self.__current_token(), Sc.IndexOperator)
         if not self.__is_token_then_next(TokenType.CLOSE_SQUARE_BRACKET):
-            raise MissingBracketException(TokenType.CLOSE_SQUARE_BRACKET, self.__current_token())
+            raise MissingBracketException(TokenType.CLOSE_SQUARE_BRACKET, self.__current_token(), Sc.IndexOperator)
 
         return IndexOperator(first_selector, second_selector)
 
@@ -189,8 +192,7 @@ class SyntacticAnalyzer:
         while self.__is_token(TokenType.PLUS) or self.__is_token(TokenType.MINUS):
             operators.append(self.__current_token_value_then_next())
             if (mul_expression := self.__try_parse_multiplicative_expression()) is None:
-                # After '+' or '-' operand there must be a multiplicative expression.
-                raise UnexpectedTokenException(self.__current_token())
+                raise MissingExpressionException(self.__current_token(), Sc.AdditiveExpression)
             mul_expressions.append(mul_expression)
 
         return mul_expression if len(mul_expressions) == 1 \
@@ -204,8 +206,7 @@ class SyntacticAnalyzer:
         while self.__is_token(TokenType.MULTIPLY) or self.__is_token(TokenType.DIVIDE):
             operators.append(self.__current_token_value_then_next())
             if (atomic_expression := self.__try_parse_atomic_expression()) is None:
-                # After the '*' or '/' operand there must be an atomic expression.
-                raise UnexpectedTokenException(self.__current_token())
+                raise MissingExpressionException(self.__current_token(), Sc.MultiplicativeExpression)
             atomic_expressions.append(atomic_expression)
 
         return atomic_expression if len(atomic_expressions) == 1 else \
@@ -225,7 +226,7 @@ class SyntacticAnalyzer:
         # If we have read the negation sign, but were unable to parse anything,
         # it means an error.
         if negated:
-            raise UnexpectedTokenException(self.__current_token())
+            raise MissingExpressionException(self.__current_token(), Sc.AtomicExpression)
 
         return None
 
@@ -238,20 +239,17 @@ class SyntacticAnalyzer:
             return Identifier(identifier)
         args = self.__try_parse_arguments()
         if not self.__is_token_then_next(TokenType.CLOSE_ROUND_BRACKET):
-            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token())
+            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token(), Sc.FunctionCall)
 
         return FunctionCall(identifier, args)
 
     def __try_parse_arguments(self):
-        if self.__is_token(TokenType.CLOSE_ROUND_BRACKET):
-            return []
         if (expression := self.__try_parse_additive_expression()) is None:
-            raise UnexpectedTokenException(self.__current_token())
+            return []
         arguments = [expression]
         while self.__is_token_then_next(TokenType.COMMA):
             if (expression := self.__try_parse_additive_expression()) is None:
-                # After the comma, there must be an expression.
-                raise UnexpectedTokenException(self.__current_token())
+                raise MissingExpressionException(self.__current_token(), Sc.Arguments)
             arguments.append(expression)
 
         return arguments
@@ -260,9 +258,9 @@ class SyntacticAnalyzer:
         if not self.__is_token_then_next(TokenType.OPEN_ROUND_BRACKET):
             return None
         if (or_condition := self.__try_parse_or_condition()) is None:
-            raise UnexpectedTokenException(self.__current_token())
+            raise MissingConditionException(self.__current_token(), Sc.OrCondition)
         if not self.__is_token_then_next(TokenType.CLOSE_ROUND_BRACKET):
-            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token())
+            raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token(), Sc.OrCondition)
 
         return or_condition
 
@@ -272,8 +270,7 @@ class SyntacticAnalyzer:
         and_conditions = [and_condition]
         while self.__is_token_then_next(TokenType.OR):
             if (and_condition := self.__try_parse_and_condition()) is None:
-                # After the or operand, there mus be an and condition.
-                raise UnexpectedTokenException(self.__current_token())
+                raise MissingConditionException(self.__current_token(), Sc.OrCondition)
             and_conditions.append(and_condition)
 
         return and_condition if len(and_conditions) == 1 \
@@ -285,17 +282,18 @@ class SyntacticAnalyzer:
         rel_conditions = [rel_condition]
         while self.__is_token_then_next(TokenType.AND):
             if (rel_condition := self.__try_parse_relation_condition()) is None:
-                # After the and operand, there must be an relation condition.
-                raise UnexpectedTokenException(self.__current_token())
+                raise MissingConditionException(self.__current_token(), Sc.AndCondition)
             rel_conditions.append(rel_condition)
 
         return rel_condition if len(rel_conditions) == 1 \
             else AndCondition(rel_conditions)
 
     def __try_parse_relation_condition(self):
+        # Erase redundant if statement.
         negated = False
         if self.__is_token_then_next(TokenType.NOT):
             negated = True
+        # Error: If negated then error, else None.
         if (left_expression := self.__try_parse_additive_expression()) is None:
             raise UnexpectedTokenException(self.__current_token())
         possible_token_types = [
@@ -310,7 +308,7 @@ class SyntacticAnalyzer:
             if self.__is_token(token_type):
                 operator = self.__current_token_value_then_next()
                 if (right_expression := self.__try_parse_additive_expression()) is None:
-                    raise UnexpectedTokenException(self.__current_token())
+                    raise MissingExpressionException(self.__current_token(), Sc.RelationCondition)
                 return RelationCondition(negated, left_expression, operator, right_expression)
 
         return RelationCondition(negated, left_expression) if negated \
@@ -330,17 +328,16 @@ class SyntacticAnalyzer:
         if not self.__is_token_then_next(TokenType.OPEN_SQUARE_BRACKET):
             return None
         if (expression := self.__try_parse_additive_expression()) is None:
-            raise UnexpectedTokenException(self.__current_token())
+            raise MissingExpressionException(self.__current_token(), Sc.MatrixLiteral)
         expressions = [expression]
         separators = []
         while self.__is_token(TokenType.COMMA) or self.__is_token(TokenType.SEMICOLON):
             separators.append(self.__current_token_value_then_next())
             if (expression := self.__try_parse_additive_expression()) is None:
-                # After the separator, there must be following expression.
-                raise UnexpectedTokenException(self.__current_token())
+                raise MissingExpressionException(self.__current_token(), Sc.MatrixLiteral)
             expressions.append(expression)
         if not self.__is_token_then_next(TokenType.CLOSE_SQUARE_BRACKET):
-            raise MissingBracketException(TokenType.CLOSE_SQUARE_BRACKET, self.__current_token())
+            raise MissingBracketException(TokenType.CLOSE_SQUARE_BRACKET, self.__current_token(), Sc.MatrixLiteral)
 
         return MatrixLiteral(expressions, separators)
 
