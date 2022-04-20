@@ -1133,6 +1133,51 @@ class TestSyntacticAnalyzer(unittest.TestCase):
         result = parser._SyntacticAnalyzer__try_parse_function_definition()
         self.assertEqual(expected, result)
 
+    def test_function_definition_parsing_4(self):
+        """
+        Testing function definition parsing by syntactic analyzer vol. 4.
+        """
+        content = """
+                    main() {
+                        matrix = [ 12 ]
+                        a = matrix[0, 0]
+                        a = a + matrix[1-1, 0 * 1]
+                        return a * a
+                    }
+                """
+        expected = FunctionDefinition('main', [],
+                                      StatementBlock([
+                                          AssignStatement(
+                                              Identifier('matrix'),
+                                              MatrixLiteral([NumberLiteral(12)], [])
+                                          ),
+                                          AssignStatement(
+                                              Identifier('a'),
+                                              Identifier('matrix', IndexOperator(NumberLiteral(0), NumberLiteral(0)))
+                                          ),
+                                          AssignStatement(
+                                              Identifier('a'),
+                                              AdditiveExpression([
+                                                  Identifier('a'),
+                                                  Identifier('matrix', IndexOperator(
+                                                      AdditiveExpression([NumberLiteral(1), NumberLiteral(1)], ['-']),
+                                                      MultiplicativeExpression([NumberLiteral(0), NumberLiteral(1)],
+                                                                               ['*'])
+                                                  ))
+                                              ], ['+'])
+                                          ),
+                                          ReturnStatement(
+                                              MultiplicativeExpression([
+                                                  Identifier('a'),
+                                                  Identifier('a')], ['*'])
+                                          )
+                                      ]))
+        # Starting the test.
+        parser = syntactic_analyzer_pipeline(content)
+        # noinspection PyUnresolvedReferences
+        result = parser._SyntacticAnalyzer__try_parse_function_definition()
+        self.assertEqual(expected, result)
+
 
 if __name__ == '__main__':
     unittest.main()
