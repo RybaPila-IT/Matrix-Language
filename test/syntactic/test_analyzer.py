@@ -731,26 +731,23 @@ class TestSyntacticAnalyzer(unittest.TestCase):
         ]
         expected_constructions = [
             # Test 1.
-            AssignStatement('a', None,
-                            NumberLiteral(12)
-                            ),
+            AssignStatement(Identifier('a'), NumberLiteral(12)),
             # Test 2.
-            AssignStatement('a', None,
+            AssignStatement(Identifier('a'),
                             AdditiveExpression(
                                 [Identifier('a'), NumberLiteral(1)],
                                 ['+']
                             )
                             ),
             # Test 3.
-            AssignStatement('a', None,
+            AssignStatement(Identifier('a'),
                             FunctionCall(
                                 'fun',
                                 [NumberLiteral(12)]
                             )
                             ),
             # Test 4.
-            AssignStatement('a',
-                            IndexOperator(NumberLiteral(0), DotsSelect()),
+            AssignStatement(Identifier('a', IndexOperator(NumberLiteral(0), DotsSelect())),
                             MatrixLiteral(
                                 [NumberLiteral(1), NumberLiteral(2), NumberLiteral(3)],
                                 [',', ',']
@@ -925,14 +922,14 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             UntilStatement(
                 RelationCondition(False, Identifier('a'), '<=', NumberLiteral(12)),
                 StatementBlock([
-                    AssignStatement('a', None, AdditiveExpression([Identifier('a'), NumberLiteral(1)], ['+']))
+                    AssignStatement(Identifier('a'), AdditiveExpression([Identifier('a'), NumberLiteral(1)], ['+']))
                 ])
             ),
             # Test 2.
             UntilStatement(
                 AndCondition([Identifier('a'), Identifier('c')]),
                 StatementBlock([
-                    AssignStatement('a', None, FunctionCall('fun', [Identifier('a')]))
+                    AssignStatement(Identifier('a'), FunctionCall('fun', [Identifier('a')]))
                 ])
             ),
         ]
@@ -994,15 +991,15 @@ class TestSyntacticAnalyzer(unittest.TestCase):
             StatementBlock([StatementBlock([StatementBlock([])])]),
             # Test 2.
             StatementBlock([
-                AssignStatement('a', None, AdditiveExpression([Identifier('a'), NumberLiteral(1)], ['+'])),
-                AssignStatement('n', None, FunctionCall('fun', [Identifier('a')]))
+                AssignStatement(Identifier('a'), AdditiveExpression([Identifier('a'), NumberLiteral(1)], ['+'])),
+                AssignStatement(Identifier('n'), FunctionCall('fun', [Identifier('a')]))
             ]),
             # Test 3.
             StatementBlock([
                 UntilStatement(
                     RelationCondition(False, Identifier('a'), '<=', NumberLiteral(12)),
                     StatementBlock([
-                        AssignStatement('a', None, AdditiveExpression([Identifier('a'), NumberLiteral(1)], ['+']))
+                        AssignStatement(Identifier('a'), AdditiveExpression([Identifier('a'), NumberLiteral(1)], ['+']))
                     ])
                 ),
             ])
@@ -1050,11 +1047,11 @@ class TestSyntacticAnalyzer(unittest.TestCase):
         """
         expected = FunctionDefinition('main', [],
                                       StatementBlock([
-                                          AssignStatement('i', None, NumberLiteral(0)),
+                                          AssignStatement(Identifier('i'), NumberLiteral(0)),
                                           UntilStatement(
                                               RelationCondition(False, Identifier('i'), '<', NumberLiteral(10)),
                                               StatementBlock([
-                                                  AssignStatement('i', None, AdditiveExpression([
+                                                  AssignStatement(Identifier('i'), AdditiveExpression([
                                                       Identifier('i'),
                                                       NumberLiteral(1)
                                                   ], ['+'])),
@@ -1116,8 +1113,7 @@ class TestSyntacticAnalyzer(unittest.TestCase):
         expected = FunctionDefinition('rot90', [Identifier('matrix')],
                                       StatementBlock([
                                           AssignStatement(
-                                              'rot',
-                                              None,
+                                              Identifier('rot'),
                                               MatrixLiteral([
                                                   NumberLiteral(0),
                                                   NumberLiteral(1),

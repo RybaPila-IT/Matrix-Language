@@ -141,28 +141,25 @@ class FunctionCall:
 
 
 class AssignStatement:
-    def __init__(self, identifier, index_operator, expression):
+    def __init__(self, identifier, expression):
         self.identifier = identifier
-        self.index_operator = index_operator
         self.expression = expression
 
     def __repr__(self):
         return str.format(
-            'Assign statement\n\tIdentifier: {}\n\tIndex operator: {}\n\tExpression: {}\n',
+            'Assign statement\n\tIdentifier: {}\n\tExpression: {}\n',
             self.identifier,
-            self.index_operator,
             self.expression
         )
 
     def __eq__(self, other):
         if type(other) is type(self):
             return self.identifier == other.identifier and \
-                   self.index_operator == other.index_operator and \
                    self.expression == other.expression
         return False
 
     def __hash__(self):
-        return hash((self.identifier, self.index_operator, self.expression))
+        return hash((self.identifier, self.expression))
 
 
 class IndexOperator:
@@ -371,19 +368,25 @@ class NumberLiteral:
 
 
 class Identifier:
-    def __init__(self, name):
+    def __init__(self, name, index_operator=None):
         self.name = name
+        self.index_operator = None
 
     def __repr__(self):
-        return str.format('Identifier\n\tName: {}\n', self.name)
+        return str.format(
+            'Identifier\n\tName: {}\n\tIndex operator: {}\n',
+            self.name,
+            self.index_operator
+        )
 
     def __eq__(self, other):
         if type(other) is type(self):
-            return self.name == other.name
+            return self.name == other.name and \
+                    self.index_operator == other.index_operator
         return False
 
     def __hash__(self):
-        return hash(self.name)
+        return hash((self.name, self.index_operator))
 
 
 class DotsSelect:

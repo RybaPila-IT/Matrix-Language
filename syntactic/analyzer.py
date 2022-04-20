@@ -163,7 +163,7 @@ class SyntacticAnalyzer:
         if (expression := self.__try_parse_additive_expression()) is None:
             raise MissingExpressionException(self.__current_token(), Sc.Assignment)
 
-        return AssignStatement(identifier, index_operator, expression)
+        return AssignStatement(Identifier(identifier, index_operator), expression)
 
     def __try_parse_index_operator(self):
         if not self.__is_token_then_next(TokenType.OPEN_SQUARE_BRACKET):
@@ -232,7 +232,8 @@ class SyntacticAnalyzer:
             return None
         identifier = self.__current_token_value_then_next()
         if not self.__is_token_then_next(TokenType.OPEN_ROUND_BRACKET):
-            return Identifier(identifier)
+            return Identifier(identifier, self.__try_parse_index_operator())
+        # Here we know that we are parsing function call.
         args = self.__try_parse_arguments()
         if not self.__is_token_then_next(TokenType.CLOSE_ROUND_BRACKET):
             raise MissingBracketException(TokenType.CLOSE_ROUND_BRACKET, self.__current_token(), Sc.FunctionCall)
