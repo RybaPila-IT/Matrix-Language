@@ -3,8 +3,30 @@ from syntactic.exception import *
 
 
 class SyntacticAnalyzer:
+    """
+    Class performing the syntactic analysis of the source code.
+
+    Syntactic analyzer (parser) execution is the second step in
+    the analysis of the obtained program source code.
+    It produces the syntax tree representation of the source code.
+    Note: in this implementation the resulting tree slightly differs from
+    traditional programming tree, but it keeps the general conventions.
+
+    The allowed constructions of the program are specified by the language
+    grammar. For more information on grammar, see README.md.
+
+    Syntactic analyzer works with tokens, which are provided by the lexical
+    analyzer. Tokens are transformed into relevant syntactic constructions
+    which may be simple (ex. NumberLiteral) or compound (MatrixLiteral).
+    See README.md for more information on allowed constructions.
+    """
 
     def __init__(self, lexer):
+        """
+        SyntacticAnalyzer constructor.
+
+        :param lexer: instance of the LexicalAnalyzer class.
+        """
         self.lexer = lexer
         self.token = None
         # Invariant: in token field we keep the fresh
@@ -12,6 +34,19 @@ class SyntacticAnalyzer:
         self.__next_token()
 
     def construct_program(self):
+        """
+        Attempt to parse the provided source code.
+
+        This method tries to construct the program out of provided
+        source code, which is wrapped by the LexicalAnalyzer.
+
+        If the SyntacticAnalyzer discovers an error in source code,
+        it will throw an error without any attempt to fix the issue.
+
+        See README.md for language grammar reference.
+
+        :return: syntax_tree.constructions.Program class representing the parsed program.
+        """
         functions_definitions = {}
         while (new_func_def := self.__try_parse_function_definition()) is not None:
             functions_definitions[new_func_def.identifier] = new_func_def
