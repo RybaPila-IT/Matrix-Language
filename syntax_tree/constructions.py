@@ -370,7 +370,7 @@ class NumberLiteral:
 class Identifier:
     def __init__(self, name, index_operator=None):
         self.name = name
-        self.index_operator = None
+        self.index_operator = index_operator
 
     def __repr__(self):
         return str.format(
