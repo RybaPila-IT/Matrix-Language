@@ -1,8 +1,6 @@
 name: Test Matrix-Language project
 
-on:
-  pull_request:
-    branches: [ * ]
+on: [pull_request]
 
 permissions:
   contents: read
