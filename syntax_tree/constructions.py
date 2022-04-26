@@ -262,6 +262,9 @@ class OrCondition:
     def __init__(self, and_conditions):
         self.and_conditions = and_conditions
 
+    def accept(self, visitor):
+        visitor.evaluate_or_condition(self)
+
     def __repr__(self):
         return str.format(
             'OR Condition\n\tAND conditions: {}\n',

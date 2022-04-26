@@ -247,6 +247,17 @@ class Interpreter:
             e.stack.append('evaluate negated atomic expression')
             raise e
 
+    def evaluate_or_condition(self, or_condition):
+        try:
+            for and_condition in or_condition.and_conditions:
+                and_condition.accept(self)
+                if self.result:
+                    break
+        except WithStackTraceException as e:
+            e.stack.append('evaluate or condition')
+            raise e
+
+
     def __load_library_functions(self):
         # TODO (radek.r) Implement this method.
         pass
