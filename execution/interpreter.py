@@ -1,4 +1,5 @@
 from enum import Enum, auto
+
 from execution.exception import *
 
 
@@ -124,12 +125,38 @@ class Interpreter:
         self.returns = False
         self.stack.close_context()
 
-    def evaluate_assign_statement(self, assign_statement):
-        pass
-
     def __bind_and_evaluate_library_function(self, identifier, args):
         # TODO (radek.r) Implement this method.
         pass
+
+    def evaluate_assign_statement(self, assign_statement):
+        # Possible options are assignment with index operator
+        # or simple assignment.
+        try:
+            assign_statement.expression.accept(self)
+            result = self.result
+            variable = self.stack.get_variable(assign_statement.identifier)
+            self.__check_variables_types_matching(variable, result, allow_undefined=True)
+            # TODO (radek.r) Add logic handling possible indexing operator.
+            # If the check passed, update variable.
+            self.stack.set_variable(assign_statement.identifier, result)
+        except WithStackTraceException as e:
+            e.stack.append('evaluate assign statement')
+            raise e
+
+    @staticmethod
+    def __check_variables_types_matching(left, right, allow_undefined=False):
+        # Special case for the assignment statement.
+        if allow_undefined and left.type == _VariableType.UNDEFINED:
+            return True
+        if left.type == _VariableType.STRING or right.type == _VariableType.STRING:
+            raise StringUsageException()
+        if left.type == right.type:
+            return True
+        if left.type == _VariableType.MATRIX and right.type == _VariableType.NUMBER:
+            return True
+        # Any other combinations of types are forbidden.
+        raise TypesMismatchException(left.type, right.type)
 
     def __load_library_functions(self):
         # TODO (radek.r) Implement this method.
@@ -142,6 +169,12 @@ class Interpreter:
 class _FunctionStack:
     def __init__(self):
         self.stack = [_ScopeStack()]
+
+    def get_variable(self, identifier):
+        return self.stack[-1].get_variable(identifier)
+
+    def set_variable(self, identifier, variable):
+        self.stack[-1].set_variable(identifier, variable)
 
     def open_context(self, init_scope=None):
         self.stack.append(_ScopeStack(init_scope))
@@ -168,6 +201,24 @@ class _ScopeStack:
     def close_scope(self):
         self.stack.pop()
 
+    def get_variable(self, identifier):
+        for scope in reversed(self.stack):
+            if identifier in scope:
+                return scope[identifier]
+        # If we did not find the variable it means that it has
+        # been initialized in the current scope.
+        self.stack[-1][identifier] = _Variable(_VariableType.UNDEFINED, None)
+        return self.stack[-1][identifier]
+
+    def set_variable(self, identifier, variable):
+        for scope in reversed(self.stack):
+            if identifier in scope:
+                scope[identifier] = variable
+                return
+        # If identifier was not found the behaviour is to set the
+        # identifier in current scope.
+        self.stack[-1][identifier] = variable
+
 
 class _Variable:
     def __init__(self, var_type, value):
@@ -178,5 +229,6 @@ class _Variable:
 class _VariableType(Enum):
     MATRIX = auto(),
     NUMBER = auto(),
-    STRING = auto()
+    STRING = auto(),
+    UNDEFINED = auto()
 

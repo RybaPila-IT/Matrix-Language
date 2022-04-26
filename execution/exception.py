@@ -24,3 +24,14 @@ class FunctionArgumentsMismatchException(WithStackTraceException):
     def __init__(self, identifier, expected, received):
         super().__init__()
         self.stack.insert(0, (identifier, expected, received))
+
+
+class StringUsageException(WithStackTraceException):
+    def __init__(self):
+        super().__init__()
+
+
+class TypesMismatchException(WithStackTraceException):
+    def __init__(self, left, right):
+        super().__init__()
+        self.stack.insert(0, (left, right))

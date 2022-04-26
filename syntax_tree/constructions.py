@@ -186,28 +186,6 @@ class AssignStatement:
         return hash((self.identifier, self.expression))
 
 
-class IndexOperator:
-    def __init__(self, first_selector, second_selector):
-        self.first_selector = first_selector
-        self.second_selector = second_selector
-
-    def __repr__(self):
-        return str.format(
-            'Index operator\n\tFirst selector: {}\n\tSecond selector: {}\n',
-            self.first_selector,
-            self.second_selector
-        )
-
-    def __eq__(self, other):
-        if type(other) is type(self):
-            return self.first_selector == other.first_selector and \
-                   self.second_selector == other.second_selector
-        return False
-
-    def __hash__(self):
-        return hash((self.first_selector, self.second_selector))
-
-
 class AdditiveExpression:
     def __init__(self, multiplicative_expressions, operators=None):
         self.multiplicative_expressions = multiplicative_expressions
@@ -411,6 +389,28 @@ class Identifier:
 
     def __hash__(self):
         return hash((self.name, self.index_operator))
+
+
+class IndexOperator:
+    def __init__(self, first_selector, second_selector):
+        self.first_selector = first_selector
+        self.second_selector = second_selector
+
+    def __repr__(self):
+        return str.format(
+            'Index operator\n\tFirst selector: {}\n\tSecond selector: {}\n',
+            self.first_selector,
+            self.second_selector
+        )
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.first_selector == other.first_selector and \
+                   self.second_selector == other.second_selector
+        return False
+
+    def __hash__(self):
+        return hash((self.first_selector, self.second_selector))
 
 
 class DotsSelect:
