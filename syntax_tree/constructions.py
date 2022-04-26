@@ -240,6 +240,9 @@ class NegatedAtomicExpression:
     def __init__(self, atomic_expression):
         self.atomic_expression = atomic_expression
 
+    def accept(self, visitor):
+        visitor.evaluate_negated_atomic_expression(self)
+
     def __repr__(self):
         return str.format(
             'Negated Atomic Expression\n\tAtomic expression: {}\n',

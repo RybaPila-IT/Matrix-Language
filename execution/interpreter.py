@@ -235,6 +235,18 @@ class Interpreter:
                     raise ZeroDivisionException()
                 self.result = _Variable(left.type, left.value / right.value)
 
+    def evaluate_negated_atomic_expression(self, expression):
+        try:
+            expression.atomic_expression.accept(self)
+            if self.result.type == _VariableType.MATRIX:
+                self.result.value = np.negative(self.result.value)
+            elif self.result.type == _VariableType.NUMBER:
+                self.result.value = - self.result.value
+            # TODO (radek.r) Think about throwing an error here.
+        except WithStackTraceException as e:
+            e.stack.append('evaluate negated atomic expression')
+            raise e
+
     def __load_library_functions(self):
         # TODO (radek.r) Implement this method.
         pass
