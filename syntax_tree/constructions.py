@@ -216,6 +216,9 @@ class MultiplicativeExpression:
         self.atomic_expressions = atomic_expressions
         self.operators = operators
 
+    def accept(self, visitor):
+        visitor.evaluate_multiplicative_expression(self)
+
     def __repr__(self):
         return str.format(
             'Multiplicative Expression\n\tAtomic expressions: {}\n\tOperators: {}\n',

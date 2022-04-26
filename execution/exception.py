@@ -43,3 +43,8 @@ class MatrixDimensionsMismatchException(WithStackTraceException):
         super().__init__()
         self.left_dim = left_dim
         self.right_dim = right_dim
+
+
+class ZeroDivisionException(WithStackTraceException):
+    def __init__(self):
+        super().__init__()

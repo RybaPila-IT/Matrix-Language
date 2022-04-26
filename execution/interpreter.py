@@ -12,6 +12,9 @@ class Interpreter:
         self.stack = _FunctionStack()
         self.result = None
         self.returns = False
+        # Invariant: result contains recent variable result of
+        # execution and returns is a flag informing about
+        # return statement being executed.
 
         self.__load_library_functions()
 
@@ -159,7 +162,7 @@ class Interpreter:
                     prev_result = result
                 else:
                     self.__check_variables_types_matching(prev_result, result)
-                    self.__combine_variables(prev_result, result, operator)
+                    self.__combine_additive_variables(prev_result, result, operator)
                     prev_result = self.result
 
         except WithStackTraceException as e:
@@ -180,27 +183,57 @@ class Interpreter:
         # Any other combinations of types are forbidden.
         raise TypesMismatchException(left.type, right.type)
 
-    def __combine_variables(self, left, right, operator):
-        try:
-            match operator:
-                case '*':
-                    if left.type == _VariableType.MATRIX and right.type == _VariableType.MATRIX:
-                        # Matrix multiplication requires separate error handling since we want to
-                        # raise special exception.
-                        try:
-                            self.result = _Variable(_VariableType.MATRIX, np.matmul(left.value, right.value))
-                        except ValueError:
-                            raise MatrixDimensionsMismatchException(left.value.shape, right.value.shape)
-                    else:
-                        self.result = _Variable(left.type, left.value * right.value)
-                case '/':
-                    self.result = _Variable(left.type, left.value / right.value)
-                case '+':
+    def __combine_additive_variables(self, left, right, operator):
+        match operator:
+            case '+':
+                if left.type == _VariableType.MATRIX and right.type == _VariableType.MATRIX:
+                    self.result = _Variable(_VariableType.MATRIX, np.add(left.value, right.value))
+                else:
                     self.result = _Variable(left.type, left.value + right.value)
-                case '-':
+            case '-':
+                if left.type == _VariableType.MATRIX and right.type == _VariableType.MATRIX:
+                    self.result = _Variable(_VariableType.MATRIX, np.add(left.value, np.negative(right.value)))
+                else:
                     self.result = _Variable(left.type, left.value - right.value)
-        except ValueError:
-            raise TypesMismatchException(left, right)
+
+    def evaluate_multiplicative_expression(self, mul_expression):
+        try:
+            # Hacky solution: append some dummy operator at the beginning  in order to use zip function.
+            # Below if ... else ... condition will always avoid this dummy operator usage.
+            operators = ['_', *mul_expression.operators]
+            prev_result = None
+
+            for atomic_expression, operator in zip(mul_expression.atomic_expressions, operators):
+                atomic_expression.accept(self)
+                result = self.result
+                if prev_result is None:
+                    prev_result = result
+                else:
+                    self.__check_variables_types_matching(prev_result, result)
+                    self.__combine_multiplicative_variables(prev_result, result, operator)
+                    prev_result = self.result
+
+        except WithStackTraceException as e:
+            e.stack.append('evaluate multiplicative expression')
+            raise e
+
+    def __combine_multiplicative_variables(self, left, right, operator):
+        match operator:
+            case '*':
+                if left.type == _VariableType.MATRIX and right.type == _VariableType.MATRIX:
+                    # Matrix multiplication requires separate error handling.
+                    try:
+                        self.result = _Variable(_VariableType.MATRIX, np.matmul(left.value, right.value))
+                    except ValueError:
+                        raise MatrixDimensionsMismatchException(left.value.shape, right.value.shape)
+                else:
+                    self.result = _Variable(left.type, left.value * right.value)
+            case '/':
+                if right.type == _VariableType.MATRIX and right.type == _VariableType.MATRIX:
+                    raise TypesMismatchException(left.type, right.type)
+                if right.type == _VariableType.NUMBER and right.value == 0:
+                    raise ZeroDivisionException()
+                self.result = _Variable(left.type, left.value / right.value)
 
     def __load_library_functions(self):
         # TODO (radek.r) Implement this method.
@@ -275,4 +308,3 @@ class _VariableType(Enum):
     NUMBER = auto(),
     STRING = auto(),
     UNDEFINED = auto()
-
