@@ -70,6 +70,9 @@ class IfStatement:
         self.statement_block = statement_block
         self.else_statement = else_statement
 
+    def accept(self, visitor):
+        visitor.evaluate_if_statement(self)
+
     def __repr__(self):
         return str.format(
             'IF statement\n\tCondition: {}\n\t Statement block: {}\n\t: Else statement: {}\n',
@@ -94,6 +97,9 @@ class UntilStatement:
         self.condition = condition
         self.statement_block = statement_block
 
+    def accept(self, visitor):
+        visitor.evaluate_until_statement(self)
+
     def __repr__(self):
         return str.format(
             'Until statement\n\tCondition: {}\n\tStatement block: {}\n',
@@ -114,6 +120,9 @@ class UntilStatement:
 class ReturnStatement:
     def __init__(self, expression=None):
         self.expression = expression
+
+    def accept(self, visitor):
+        visitor.evaluate_return_statement(self)
 
     def __repr__(self):
         return str.format('Return statement\n\tExpression: {}\n', self.expression)
