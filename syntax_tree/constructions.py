@@ -141,6 +141,9 @@ class FunctionCall:
         self.identifier = identifier
         self.arguments = arguments
 
+    def accept(self, visitor):
+        visitor.evaluate_function_call(self)
+
     def __repr__(self):
         return str.format(
             'Function call\n\tIdentifier: {}\n\tArguments: {}\n',
