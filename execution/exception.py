@@ -17,7 +17,7 @@ class WithStackTraceException(InterpreterException):
 class UndefinedFunctionException(WithStackTraceException):
     def __init__(self, identifier):
         super().__init__()
-        self.stack.insert(0, identifier)
+        self.identifier = identifier
 
 
 class FunctionArgumentsMismatchException(WithStackTraceException):
@@ -34,4 +34,12 @@ class StringUsageException(WithStackTraceException):
 class TypesMismatchException(WithStackTraceException):
     def __init__(self, left, right):
         super().__init__()
-        self.stack.insert(0, (left, right))
+        self.left = left
+        self.right = right
+
+
+class MatrixDimensionsMismatchException(WithStackTraceException):
+    def __init__(self, left_dim, right_dim):
+        super().__init__()
+        self.left_dim = left_dim
+        self.right_dim = right_dim

@@ -191,6 +191,9 @@ class AdditiveExpression:
         self.multiplicative_expressions = multiplicative_expressions
         self.operators = operators
 
+    def accept(self, visitor):
+        visitor.evaluate_additive_expression(self)
+
     def __repr__(self):
         return str.format(
             'Additive Expression\n\tMultiplicative expression: {}\n\tOperators: {}\n',

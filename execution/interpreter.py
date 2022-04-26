@@ -1,3 +1,4 @@
+import numpy as np
 from enum import Enum, auto
 
 from execution.exception import *
@@ -144,6 +145,27 @@ class Interpreter:
             e.stack.append('evaluate assign statement')
             raise e
 
+    def evaluate_additive_expression(self, add_expression):
+        try:
+            # Hacky solution: append some dummy operator at the beginning  in order to use zip function.
+            # Below if ... else ... condition will always avoid this dummy operator usage.
+            operators = ['_', *add_expression.operators]
+            prev_result = None
+
+            for mul_expr, operator in zip(add_expression.multiplicative_expressions, operators):
+                mul_expr.accept(self)
+                result = self.result
+                if prev_result is None:
+                    prev_result = result
+                else:
+                    self.__check_variables_types_matching(prev_result, result)
+                    self.__combine_variables(prev_result, result, operator)
+                    prev_result = self.result
+
+        except WithStackTraceException as e:
+            e.stack.append('evaluate additive expression')
+            raise e
+
     @staticmethod
     def __check_variables_types_matching(left, right, allow_undefined=False):
         # Special case for the assignment statement.
@@ -157,6 +179,28 @@ class Interpreter:
             return True
         # Any other combinations of types are forbidden.
         raise TypesMismatchException(left.type, right.type)
+
+    def __combine_variables(self, left, right, operator):
+        try:
+            match operator:
+                case '*':
+                    if left.type == _VariableType.MATRIX and right.type == _VariableType.MATRIX:
+                        # Matrix multiplication requires separate error handling since we want to
+                        # raise special exception.
+                        try:
+                            self.result = _Variable(_VariableType.MATRIX, np.matmul(left.value, right.value))
+                        except ValueError:
+                            raise MatrixDimensionsMismatchException(left.value.shape, right.value.shape)
+                    else:
+                        self.result = _Variable(left.type, left.value * right.value)
+                case '/':
+                    self.result = _Variable(left.type, left.value / right.value)
+                case '+':
+                    self.result = _Variable(left.type, left.value + right.value)
+                case '-':
+                    self.result = _Variable(left.type, left.value - right.value)
+        except ValueError:
+            raise TypesMismatchException(left, right)
 
     def __load_library_functions(self):
         # TODO (radek.r) Implement this method.
