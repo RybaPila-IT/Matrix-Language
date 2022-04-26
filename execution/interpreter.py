@@ -257,6 +257,15 @@ class Interpreter:
             e.stack.append('evaluate or condition')
             raise e
 
+    def evaluate_and_condition(self, and_condition):
+        try:
+            for rel_condition in and_condition.rel_conditions:
+                rel_condition.accept(self)
+                if not self.result:
+                    break
+        except WithStackTraceException as e:
+            e.stack.append('evaluate and condition')
+            raise e
 
     def __load_library_functions(self):
         # TODO (radek.r) Implement this method.

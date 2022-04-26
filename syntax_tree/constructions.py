@@ -284,6 +284,9 @@ class AndCondition:
     def __init__(self, rel_conditions):
         self.rel_conditions = rel_conditions
 
+    def accept(self, visitor):
+        visitor.evaluate_and_condition(self)
+
     def __repr__(self):
         return str.format(
             'AND Condition\n\tRelation conditions: {}\n',
