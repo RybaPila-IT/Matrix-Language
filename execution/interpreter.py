@@ -267,6 +267,70 @@ class Interpreter:
             e.stack.append('evaluate and condition')
             raise e
 
+    def evaluate_relation_condition(self, rel_condition):
+        try:
+            rel_condition.left_expression.accept(self)
+            if rel_condition.operator is None:
+                self.__evaluate_result_into_bool()
+            else:
+                left = self.result
+                rel_condition.right_expression.accept(self)
+                right = self.result
+                self.__evaluate_comparison_into_bool(left, right, rel_condition.operator)
+
+        except WithStackTraceException as e:
+            e.stack.append('evaluate rel condition')
+            raise e
+
+    def __evaluate_result_into_bool(self):
+        if self.result.type == _VariableType.MATRIX:
+            self.result = not np.any(self.result.value)
+        elif self.result.type == _VariableType.NUMBER:
+            self.result = self.result.value == 0
+
+        raise InvalidTypeException(self.result.type)
+
+    def __evaluate_comparison_into_bool(self, left, right, operator):
+        invalid_types = [_VariableType.STRING, _VariableType.UNDEFINED]
+        if left.type in invalid_types or right.type in invalid_types:
+            raise InvalidTypeException(self.result.type)
+        if left.type != right.type:
+            raise TypesMismatchException(left, right)
+        if left.type == _VariableType.MATRIX:
+            self.__evaluate_matrix_comparison_into_bool(left, right, operator)
+        else:
+            self.__evaluate_number_comparison_into_bool(left, right, operator)
+
+    def __evaluate_matrix_comparison_into_bool(self, left, right, operator):
+        match operator:
+            case '<':
+                self.result = np.all(np.less(left.value, right.value) is True)
+            case '>':
+                self.result = np.all(np.greater(left.value, right.value) is True)
+            case '>=':
+                self.result = np.all(np.greater_equal(left.value, right.value) is True)
+            case '<=':
+                self.result = np.all(np.less_equal(left.value, right.value) is True)
+            case '==':
+                self.result = np.array_equal(left.value, right.value)
+            case '!=':
+                self.result = not np.array_equal(left.value, right.value)
+
+    def __evaluate_number_comparison_into_bool(self, left, right, operator):
+        match operator:
+            case '<':
+                self.result = left.value < right.value
+            case '>':
+                self.result = left.value > right.value
+            case '>=':
+                self.result = left.value >= right.value
+            case '<=':
+                self.result = left.value <= right.value
+            case '==':
+                self.result = left.value == right.value
+            case '!=':
+                self.result = left.value != right.value
+
     def __load_library_functions(self):
         # TODO (radek.r) Implement this method.
         pass

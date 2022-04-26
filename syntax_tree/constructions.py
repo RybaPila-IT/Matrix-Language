@@ -309,6 +309,9 @@ class RelationCondition:
         self.operator = operator
         self.right_expression = right_expression
 
+    def accept(self, visitor):
+        visitor.evaluate_relation_condition(self)
+
     def __repr__(self):
         return str.format(
             'Relation Condition\n\tNegated: {}\n\tLeft expression: {}\n\tOperator: {}\n\tRight expression: {}\n',

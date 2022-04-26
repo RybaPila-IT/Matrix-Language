@@ -48,3 +48,9 @@ class MatrixDimensionsMismatchException(WithStackTraceException):
 class ZeroDivisionException(WithStackTraceException):
     def __init__(self):
         super().__init__()
+
+
+class InvalidTypeException(WithStackTraceException):
+    def __init__(self, rec_type):
+        super().__init__()
+        self.type = rec_type
