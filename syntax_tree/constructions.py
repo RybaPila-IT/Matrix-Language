@@ -166,6 +166,9 @@ class AssignStatement:
         self.identifier = identifier
         self.expression = expression
 
+    def accept(self, visitor):
+        visitor.evaluate_assign_statement(self)
+
     def __repr__(self):
         return str.format(
             'Assign statement\n\tIdentifier: {}\n\tExpression: {}\n',

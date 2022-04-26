@@ -1,3 +1,4 @@
+from enum import Enum, auto
 from execution.exception import *
 
 
@@ -33,7 +34,7 @@ class Interpreter:
         try:
             function_def.statement_block.accept(self)
         except WithStackTraceException as e:
-            e.stack.append('evaluate function definition')
+            e.stack.append(f'evaluate function {function_def.identifier}')
             raise e
 
     def evaluate_statement_block(self, statement_block):
@@ -102,7 +103,7 @@ class Interpreter:
                 argument.accept(self)
                 evaluated_arguments.append(self.result)
             except WithStackTraceException as e:
-                e.stack.append('evaluate function call arguments')
+                e.stack.append(f'evaluate function {function_call.identifier} arguments')
         return evaluated_arguments
 
     def __bind_and_evaluate_program_function(self, identifier, args):
@@ -123,11 +124,16 @@ class Interpreter:
         self.returns = False
         self.stack.close_context()
 
+    def evaluate_assign_statement(self, assign_statement):
+        pass
+
     def __bind_and_evaluate_library_function(self, identifier, args):
-        print(f'Evaluated library function {identifier}!')
+        # TODO (radek.r) Implement this method.
+        pass
 
     def __load_library_functions(self):
-        self.lib_functions['print'] = 'hello'
+        # TODO (radek.r) Implement this method.
+        pass
 
     def __load_program_functions(self, program):
         self.program_functions = program.functions_definitions.copy()
@@ -161,3 +167,16 @@ class _ScopeStack:
 
     def close_scope(self):
         self.stack.pop()
+
+
+class _Variable:
+    def __init__(self, var_type, value):
+        self.type = var_type
+        self.value = value
+
+
+class _VariableType(Enum):
+    MATRIX = auto(),
+    NUMBER = auto(),
+    STRING = auto()
+
