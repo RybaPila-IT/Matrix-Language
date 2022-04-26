@@ -2,6 +2,9 @@ class Program:
     def __init__(self, functions_definitions):
         self.functions_definitions = functions_definitions
 
+    def accept(self, visitor):
+        visitor.evaluate_program(self)
+
     def __repr__(self):
         return str.format('Program:\nFunctions: {}\n', self.functions_definitions)
 
@@ -19,6 +22,9 @@ class FunctionDefinition:
         self.identifier = identifier
         self.parameters = parameters
         self.statement_block = statement_block
+
+    def accept(self, visitor):
+        visitor.evaluate_function_definition(self)
 
     def __repr__(self):
         return str.format(
@@ -45,6 +51,9 @@ class StatementBlock:
 
     def __repr__(self):
         return str.format('Statement block\n\tStatements: {}\n', self.statements)
+
+    def accept(self, visitor):
+        visitor.evaluate_statement_block(self)
 
     def __eq__(self, other):
         if type(other) is type(self):
