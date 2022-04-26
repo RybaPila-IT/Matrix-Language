@@ -84,10 +84,50 @@ class Interpreter:
             raise e
 
     def evaluate_function_call(self, function_call):
-        pass
+        args = self.__evaluate_function_call_arguments(function_call)
+        # Functions defined in program source code behaves different than
+        # those defined in libraries.
+        if (identifier := function_call.identifier) in self.program_functions:
+            self.__bind_and_evaluate_program_function(identifier, args)
+        elif identifier in self.lib_functions:
+            self.__bind_and_evaluate_library_function(identifier, args)
+        else:
+            # There is no other place, where the function may be present.
+            raise UndefinedFunctionException(identifier)
+
+    def __evaluate_function_call_arguments(self, function_call):
+        evaluated_arguments = []
+        for argument in function_call.arguments:
+            try:
+                argument.accept(self)
+                evaluated_arguments.append(self.result)
+            except WithStackTraceException as e:
+                e.stack.append('evaluate function call arguments')
+        return evaluated_arguments
+
+    def __bind_and_evaluate_program_function(self, identifier, args):
+        function_def = self.program_functions[identifier]
+        if len(function_def.parameters) != len(args):
+            raise FunctionArgumentsMismatchException(identifier, len(function_def.parameters), len(args))
+        # Binding the arguments with names.
+        initial_scope = {}
+        for ident, arg in zip(function_def.parameters, args):
+            initial_scope[ident.name] = arg
+        # Preparing fresh context for the function call with
+        # bonded arguments placed in the initial scope.
+        self.stack.open_context(initial_scope)
+        # Evaluate the function call as the function definition.
+        function_def.accept(self)
+        # Clearing the flag for returning, since we do not want to
+        # end outer function execution yet and popping the context.
+        self.returns = False
+        self.stack.close_context()
+
+    def __bind_and_evaluate_library_function(self, identifier, args):
+        print(f'Evaluated library function {identifier}!')
 
     def __load_library_functions(self):
-        pass
+        self.lib_functions['print'] = 'hello'
 
     def __load_program_functions(self, program):
         self.program_functions = program.functions_definitions.copy()
@@ -97,6 +137,12 @@ class _FunctionStack:
     def __init__(self):
         self.stack = [_ScopeStack()]
 
+    def open_context(self, init_scope=None):
+        self.stack.append(_ScopeStack(init_scope))
+
+    def close_context(self):
+        self.stack.pop()
+
     def open_scope(self):
         self.stack[-1].open_scope()
 
@@ -105,6 +151,8 @@ class _FunctionStack:
 
 
 class _ScopeStack:
+    # Scope has variables binding in form of dictionary where
+    # variable name is mapped to it's value.
     def __init__(self, init=None):
         self.stack = [{} if init is None else init]
 
