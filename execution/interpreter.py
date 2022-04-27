@@ -361,25 +361,25 @@ class Interpreter:
 
 class _FunctionStack:
     def __init__(self):
-        self.stack = [_ScopeStack()]
+        self.scope_stack = [_ScopeStack()]
 
     def get_variable(self, identifier):
-        return self.stack[-1].get_variable(identifier)
+        return self.scope_stack[-1].get_variable(identifier)
 
     def set_variable(self, identifier, variable):
-        self.stack[-1].set_variable(identifier, variable)
+        self.scope_stack[-1].set_variable(identifier, variable)
 
     def open_context(self, init_scope=None):
-        self.stack.append(_ScopeStack(init_scope))
+        self.scope_stack.append(_ScopeStack(init_scope))
 
     def close_context(self):
-        self.stack.pop()
+        self.scope_stack.pop()
 
     def open_scope(self):
-        self.stack[-1].open_scope()
+        self.scope_stack[-1].open_scope()
 
     def close_scope(self):
-        self.stack[-1].close_scope()
+        self.scope_stack[-1].close_scope()
 
 
 class _ScopeStack:
@@ -412,11 +412,27 @@ class _ScopeStack:
         # identifier in current scope.
         self.stack[-1][identifier] = variable
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.stack == other.stack
+        return False
+
+    def __hash__(self):
+        return hash(self.stack)
+
 
 class _Variable:
     def __init__(self, var_type, value):
         self.type = var_type
         self.value = value
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.type == other.type and self.value == other.value
+        return False
+
+    def __hash__(self):
+        return hash((self.type, self.value))
 
 
 class _VariableType(Enum):
