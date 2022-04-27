@@ -338,6 +338,9 @@ class MatrixLiteral:
         self.expressions = expressions
         self.separators = separators
 
+    def accept(self, visitor):
+        visitor.evaluate_matrix_literal(self)
+
     def __repr__(self):
         return str.format(
             'Matrix Literal\n\tExpressions: {}\n\tSeparators: {}\n',
@@ -359,6 +362,9 @@ class StringLiteral:
     def __init__(self, value):
         self.value = value
 
+    def accept(self, visitor):
+        visitor.evaluate_string_literal(self)
+
     def __repr__(self):
         return str.format('String Literal\n\tValue: {}\n', self.value)
 
@@ -374,6 +380,9 @@ class StringLiteral:
 class NumberLiteral:
     def __init__(self, value):
         self.value = value
+
+    def accept(self, visitor):
+        visitor.evaluate_number_literal(self)
 
     def __repr__(self):
         return str.format('Number Literal\n\tValue: {}\n', self.value)
@@ -391,6 +400,9 @@ class Identifier:
     def __init__(self, name, index_operator=None):
         self.name = name
         self.index_operator = index_operator
+
+    def accept(self, visitor):
+        visitor.evaluate_identifier(self)
 
     def __repr__(self):
         return str.format(

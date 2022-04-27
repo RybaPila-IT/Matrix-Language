@@ -331,6 +331,26 @@ class Interpreter:
             case '!=':
                 self.result = left.value != right.value
 
+    def evaluate_matrix_literal(self, matrix_literal):
+        # TODO (radek.r) Implement this method.
+        pass
+
+    def evaluate_number_literal(self, number_literal):
+        self.result = _Variable(
+            _VariableType.NUMBER,
+            number_literal.value
+        )
+
+    def evaluate_string_literal(self, string_literal):
+        self.result = _Variable(
+            _VariableType.STRING,
+            string_literal.value
+        )
+
+    def evaluate_identifier(self, identifier):
+        # TODO (radek.r) Implement this method.
+        pass
+
     def __load_library_functions(self):
         # TODO (radek.r) Implement this method.
         pass
