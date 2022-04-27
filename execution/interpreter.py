@@ -332,8 +332,26 @@ class Interpreter:
                 self.result = left.value != right.value
 
     def evaluate_matrix_literal(self, matrix_literal):
-        # TODO (radek.r) Implement this method.
-        pass
+        # Hacky solution, we append fake separator in order to use zip function
+        # with ease.
+        separators = [*matrix_literal.separators, '_']
+        values = [[]]
+        try:
+            for expression, separator in zip(matrix_literal.expressions, separators):
+                expression.accept(self)
+                if self.result.type != _VariableType.NUMBER:
+                    raise InvalidTypeException(self.result.type)
+                if separator == ';':
+                    values.append([])
+                values[-1].append(self.result.value)
+        except WithStackTraceException as e:
+            e.stack.append('evaluate matrix literal')
+            raise e
+
+        self.result = _Variable(
+            _VariableType.MATRIX,
+            np.array(values)
+        )
 
     def evaluate_number_literal(self, number_literal):
         self.result = _Variable(
