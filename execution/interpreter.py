@@ -434,6 +434,9 @@ class _Variable:
     def __hash__(self):
         return hash((self.type, self.value))
 
+    def __repr__(self):
+        return f'Variable: type: {self.type}, value: {self.value}'
+
 
 class _VariableType(Enum):
     MATRIX = auto(),

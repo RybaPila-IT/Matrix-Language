@@ -38,5 +38,87 @@ class TestFunctionStack(unittest.TestCase):
         self.assertEqual(expected, function_stack.scope_stack)
 
 
+class TestScopeStack(unittest.TestCase):
+    def test_open_scope(self):
+        """
+        Tests new scope opening.
+        """
+        scope_stack = _ScopeStack()
+        expected_stack = [{}, {}]
+        scope_stack.open_scope()
+        self.assertEqual(expected_stack, scope_stack.stack)
+
+    def test_close_scope(self):
+        """
+        Tests scopes closing.
+        """
+        scope_stack = _ScopeStack()
+        scope_stack.stack = [{}, {}, {}]
+        expected_stack = [{}, {}]
+        scope_stack.close_scope()
+        self.assertEqual(expected_stack, scope_stack.stack)
+
+    def test_get_variable(self):
+        """
+        Tests variable obtaining from scope stack.
+
+        Test cases are:
+            - Variable is in the last scope
+            - Variable is not in the last scope
+            - Variable is not present in scopes at all
+        """
+        stacks = [
+            [{}, {'i': _Variable(_VariableType.NUMBER, 42)}],
+            [{'i': _Variable(_VariableType.NUMBER, 42)}, {}, {}],
+            [{}, {}]
+        ]
+        expected_vars = [
+            _Variable(_VariableType.NUMBER, 42),
+            _Variable(_VariableType.NUMBER, 42),
+            _Variable(_VariableType.UNDEFINED, None)
+        ]
+        expected_stacks = [
+            [{}, {'i': _Variable(_VariableType.NUMBER, 42)}],
+            [{'i': _Variable(_VariableType.NUMBER, 42)}, {}, {}],
+            [{}, {'i': _Variable(_VariableType.UNDEFINED, None)}]
+        ]
+        identifier = 'i'
+
+        for stack, expected_var, expected_stack in zip(stacks, expected_vars, expected_stacks):
+            scope_stack = _ScopeStack()
+            scope_stack.stack = stack
+            result = scope_stack.get_variable(identifier)
+            self.assertEqual(expected_var, result)
+            self.assertEqual(expected_stack, scope_stack.stack)
+
+    def test_set_variable(self):
+        """
+        Tests variable setting by scope stack
+
+        Test cases are:
+            - Variable is present in the last scope
+            - Variable is present not in the last scope
+            - Variable is not present in the scope stack
+        """
+        stacks = [
+            [{}, {'i': _Variable(_VariableType.NUMBER, 42)}],
+            [{'i': _Variable(_VariableType.NUMBER, 42)}, {}, {}],
+            [{}, {}]
+        ]
+        expected_stacks = [
+            [{}, {'i': _Variable(_VariableType.NUMBER, 12)}],
+            [{'i': _Variable(_VariableType.NUMBER, 12)}, {}, {}],
+            [{}, {'i': _Variable(_VariableType.NUMBER, 12)}]
+        ]
+        identifier = 'i'
+        variable = _Variable(_VariableType.NUMBER, 12)
+
+        for stack, expected_stack in zip(stacks, expected_stacks):
+            scope_stack = _ScopeStack()
+            scope_stack.stack = stack
+            scope_stack.set_variable(identifier, variable)
+            self.assertEqual(expected_stack, scope_stack.stack)
+
+
 if __name__ == '__main__':
     unittest.main()
