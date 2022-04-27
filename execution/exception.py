@@ -59,3 +59,9 @@ class InvalidTypeException(WithStackTraceException):
 class InvalidMatrixLiteralException(WithStackTraceException):
     def __init__(self):
         super().__init__()
+
+
+class IndexException(WithStackTraceException):
+    def __init__(self, index_error):
+        super().__init__()
+        self.error = index_error

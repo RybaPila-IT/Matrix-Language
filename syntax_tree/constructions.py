@@ -447,6 +447,9 @@ class DotsSelect:
     def __int__(self):
         pass
 
+    def accept(self, visitor):
+        visitor.evaluate_dots_select(self)
+
     def __repr__(self):
         return str.format('Dots Select\n')
 

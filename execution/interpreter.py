@@ -371,8 +371,65 @@ class Interpreter:
         )
 
     def evaluate_identifier(self, identifier):
-        # TODO (radek.r) Implement this method.
-        pass
+        try:
+            variable = self.stack.get_variable(identifier.name)
+            if identifier.index_operator is not None:
+                self.__evaluate_identifier_with_index_operator(variable, identifier.index_operator)
+                return
+            if variable.type == _VariableType.MATRIX:
+                # Matrix is passed by reference.
+                self.result = variable
+                return
+            # Simple types are passed by value.
+            self.result = _Variable(
+                variable.type,
+                variable.value
+            )
+        except WithStackTraceException as e:
+            e.stack.append('evaluate identifier')
+            raise e
+
+    def __evaluate_identifier_with_index_operator(self, variable, index_operator):
+        if variable.type != _VariableType.MATRIX:
+            raise InvalidTypeException(variable.type)
+        try:
+            first, second = self.__evaluate_selectors(index_operator)
+            self.__select_matrix_variable_content(variable, first, second)
+        except WithStackTraceException as e:
+            e.stack.append('evaluate identifier with index operator')
+            raise e
+        except IndexError as e:
+            raise IndexException(e)
+
+    def __evaluate_selectors(self, index_operator):
+        try:
+            index_operator.first_selector.accept(self)
+            first = self.result
+            index_operator.second_selector.accept(self)
+            second = self.result
+            allowed_selector_types = [_VariableType.DOTS, _VariableType.NUMBER]
+            if first.type not in allowed_selector_types:
+                raise InvalidTypeException(first.type)
+            if second.type not in allowed_selector_types:
+                raise InvalidTypeException(second.type)
+        except WithStackTraceException as e:
+            e.stack.append('evaluate selectors')
+            raise e
+
+        return first, second
+
+    def __select_matrix_variable_content(self, variable, first, second):
+        if first.type == _VariableType.DOTS and second.type == _VariableType.DOTS:
+            self.result = variable
+        elif first.type == _VariableType.NUMBER and second.type == _VariableType.DOTS:
+            self.result = _Variable(_VariableType.MATRIX, variable.value[first.value, :])
+        elif first.type == _VariableType.DOTS and second.type == _VariableType.NUMBER:
+            self.result = _Variable(_VariableType.MATRIX, variable.value[:, second.value])
+        else:
+            self.result = _Variable(_VariableType.NUMBER, variable.value[first.value, second.value])
+
+    def evaluate_dots_select(self, _):
+        self.result = _Variable(_VariableType.DOTS, None)
 
     def __load_library_functions(self):
         # TODO (radek.r) Implement this method.
@@ -467,4 +524,5 @@ class _VariableType(Enum):
     MATRIX = auto(),
     NUMBER = auto(),
     STRING = auto(),
+    DOTS = auto,
     UNDEFINED = auto()
