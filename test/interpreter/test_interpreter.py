@@ -7,7 +7,7 @@ from execution.exception import *
 from syntax_tree.constructions import *
 
 
-class _ErrorExpression:
+class _ErrorObject:
     def accept(self, visitor):
         raise WithStackTraceException()
 
@@ -73,7 +73,7 @@ class TestInterpreter(unittest.TestCase):
         matrix_literals = [
             MatrixLiteral([StringLiteral('Lorem ipsum')], []),
             MatrixLiteral([NumberLiteral(1), NumberLiteral(2), NumberLiteral(3), NumberLiteral(4)], [',', ',', ';']),
-            MatrixLiteral([_ErrorExpression()], [])
+            MatrixLiteral([_ErrorObject()], [])
         ]
         expected_exceptions = [
             InvalidTypeException,
@@ -182,7 +182,7 @@ class TestInterpreter(unittest.TestCase):
         function_stack.open_context(init)
         index_operators = [
             IndexOperator(StringLiteral('Lorem ipsum'), DotsSelect()),
-            IndexOperator(_ErrorExpression(), NumberLiteral(0)),
+            IndexOperator(_ErrorObject(), NumberLiteral(0)),
             IndexOperator(NumberLiteral(10), NumberLiteral(12)),
             IndexOperator(NumberLiteral(0), NumberLiteral(0))
         ]
