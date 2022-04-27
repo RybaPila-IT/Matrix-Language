@@ -334,7 +334,7 @@ class Interpreter:
     def evaluate_matrix_literal(self, matrix_literal):
         # Hacky solution, we append fake separator in order to use zip function
         # with ease.
-        separators = [*matrix_literal.separators, '_']
+        separators = ['_', *matrix_literal.separators]
         values = [[]]
         try:
             for expression, separator in zip(matrix_literal.expressions, separators):
@@ -344,6 +344,11 @@ class Interpreter:
                 if separator == ';':
                     values.append([])
                 values[-1].append(self.result.value)
+            # Checking whether row lengths of the matrix match.
+            all_rows_same_len = all([ele == len(values[0]) for ele in [len(i) for i in values]])
+            if not all_rows_same_len:
+                raise InvalidMatrixLiteralException()
+
         except WithStackTraceException as e:
             e.stack.append('evaluate matrix literal')
             raise e
@@ -446,6 +451,8 @@ class _Variable:
 
     def __eq__(self, other):
         if type(other) is type(self):
+            if self.type == _VariableType.MATRIX and other.type == _VariableType.MATRIX:
+                return np.all(self.value == other.value)
             return self.type == other.type and self.value == other.value
         return False
 

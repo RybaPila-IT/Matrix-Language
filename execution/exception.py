@@ -54,3 +54,8 @@ class InvalidTypeException(WithStackTraceException):
     def __init__(self, rec_type):
         super().__init__()
         self.type = rec_type
+
+
+class InvalidMatrixLiteralException(WithStackTraceException):
+    def __init__(self):
+        super().__init__()
