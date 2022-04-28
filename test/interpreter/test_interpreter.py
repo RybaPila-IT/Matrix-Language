@@ -5,7 +5,9 @@ import numpy as np
 from execution.interpreter import Interpreter, _Variable, _VariableType, _FunctionStack
 from execution.exception import *
 from syntax_tree.constructions import *
-
+from lexical.analyzer import LexicalAnalyzer
+from syntactic.analyzer import SyntacticAnalyzer
+from data.source.pipeline import positional_string_source_pipe
 
 class _ErrorObject:
     def accept(self, visitor):
@@ -1013,6 +1015,181 @@ class TestInterpreter(unittest.TestCase):
                 if result is not None:
                     self.assertEqual(result, statement_block.statements[i].count)
 
+    def test_program_evaluation_v1(self):
+        interpreter = Interpreter(
+            SyntacticAnalyzer(
+                LexicalAnalyzer(
+                    positional_string_source_pipe(
+                        """
+                        sum(a, b) {
+                            return a + b
+                        }
+                        
+                        main() {
+                            return sum(3, 4)
+                        }
+                        """
+                    )
+                )
+            )
+        )
+        expected_result = _Variable(_VariableType.NUMBER, 7)
+
+        try:
+            interpreter.execute()
+            self.assertEqual(expected_result, interpreter.result)
+        except InterpreterException:
+            self.assertEqual(True, False, 'Program must execute!')
+
+    def test_program_evaluation_v2(self):
+        interpreter = Interpreter(
+            SyntacticAnalyzer(
+                LexicalAnalyzer(
+                    positional_string_source_pipe(
+                        """
+                        sum(a, b) {
+                            return a + b
+                        }
+
+                        main() {
+                            a = 3
+                            b = 10
+                            if (a+b > 17) {
+                                return "Totally wrong!"
+                            } else {
+                                return sum(a+b, b)
+                            }
+                        }
+                        """
+                    )
+                )
+            )
+        )
+        expected_result = _Variable(_VariableType.NUMBER, 23)
+
+        try:
+            interpreter.execute()
+            self.assertEqual(expected_result, interpreter.result)
+        except InterpreterException:
+            self.assertEqual(True, False, 'Program must execute!')
+
+    def test_program_evaluation_v3(self):
+        interpreter = Interpreter(
+            SyntacticAnalyzer(
+                LexicalAnalyzer(
+                    positional_string_source_pipe(
+                        """
+                        modify(a) {
+                            b = [0, 0]
+                            a[0, :] = b
+                            a = a + 5
+                        }
+                        
+                        main() {
+                            a = [1, 2; 3, 4]
+                            modify(a)
+                            return a - 2
+                        }
+                        """
+                    )
+                )
+            )
+        )
+        expected_result = _Variable(_VariableType.MATRIX, np.array([[3, 3], [6, 7]]))
+
+        try:
+            interpreter.execute()
+            self.assertEqual(expected_result, interpreter.result)
+        except InterpreterException:
+            self.assertEqual(True, False, 'Program must execute!')
+
+    def test_program_evaluation_v4(self):
+        interpreter = Interpreter(
+            SyntacticAnalyzer(
+                LexicalAnalyzer(
+                    positional_string_source_pipe(
+                        """
+                        modify(a) {
+                            a = a + 5
+                        }
+
+                        main() {
+                            a = 12
+                            modify(a)
+                            return a - 2
+                        }
+                        """
+                    )
+                )
+            )
+        )
+        expected_result = _Variable(_VariableType.NUMBER, 10)
+
+        try:
+            interpreter.execute()
+            self.assertEqual(expected_result, interpreter.result)
+        except InterpreterException:
+            self.assertEqual(True, False, 'Program must execute!')
+
+    def test_program_evaluation_v5(self):
+        interpreter = Interpreter(
+            SyntacticAnalyzer(
+                LexicalAnalyzer(
+                    positional_string_source_pipe(
+                        """
+                        recursion(a) {
+                            if (a) {
+                                return 3 + recursion(a-1)
+                            }
+                            return 0
+                        }
+
+                        main() {
+                            return recursion(10)
+                        }
+                        """
+                    )
+                )
+            )
+        )
+        expected_result = _Variable(_VariableType.NUMBER, 30)
+
+        try:
+            interpreter.execute()
+            self.assertEqual(expected_result, interpreter.result)
+        except InterpreterException:
+            self.assertEqual(True, False, 'Program must execute!')
+
+    def test_program_evaluation_v6(self):
+        interpreter = Interpreter(
+            SyntacticAnalyzer(
+                LexicalAnalyzer(
+                    positional_string_source_pipe(
+                        """
+                        main() {
+                            a = 10
+                            b = 0
+                            until (a) {
+                                b = b + a
+                                a = a - 1
+                            }
+                            return b
+                        }
+                        """
+                    )
+                )
+            )
+        )
+        expected_result = _Variable(_VariableType.NUMBER, 55)
+
+        try:
+            interpreter.execute()
+            self.assertEqual(expected_result, interpreter.result)
+        except InterpreterException:
+            self.assertEqual(True, False, 'Program must execute!')
+
+    # self.stack.scope_stack[0].stack[1]['a'] is \
+    # self.stack.scope_stack[1].stack[0]['a']
 
 if __name__ == '__main__':
     unittest.main()

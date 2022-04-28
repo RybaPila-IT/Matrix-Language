@@ -59,7 +59,7 @@ class Interpreter:
 
     def evaluate_if_statement(self, if_statement):
         try:
-            if_statement.condition.accept(self)
+            self.__evaluate_condition(if_statement.condition)
             if self.result:
                 if_statement.statement_block.accept(self)
             elif if_statement.else_statement is not None:
@@ -70,15 +70,21 @@ class Interpreter:
 
     def evaluate_until_statement(self, until_statement):
         try:
-            until_statement.condition.accept(self)
+            self.__evaluate_condition(until_statement.condition)
             while self.result:
                 until_statement.statement_block.accept(self)
                 if self.returns:
                     return
-                until_statement.condition.accept(self)
+                self.__evaluate_condition(until_statement.condition)
         except WithStackTraceException as e:
             e.stack.append('evaluate until statement')
             raise e
+
+    def __evaluate_condition(self, condition):
+        condition.accept(self)
+        # Sometimes we have co cast Identifier into bool.
+        if not type(self.result) is bool:
+            self.__evaluate_result_into_bool()
 
     def evaluate_return_statement(self, return_statement):
         try:
@@ -523,7 +529,12 @@ class _ScopeStack:
     def set_variable(self, identifier, variable):
         for scope in reversed(self.stack):
             if identifier in scope:
-                scope[identifier] = variable
+                value_in_scope = scope[identifier]
+                # Hacky solution, we set type and value, but not the whole
+                # variable since we may want to make reference changing as
+                # well is some later part of the function stack.
+                value_in_scope.type = variable.type
+                value_in_scope.value = variable.value
                 return
         # If identifier was not found the behaviour is to set the
         # identifier in current scope.
