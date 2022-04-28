@@ -9,6 +9,7 @@ from lexical.analyzer import LexicalAnalyzer
 from syntactic.analyzer import SyntacticAnalyzer
 from data.source.pipeline import positional_string_source_pipe
 
+
 class _ErrorObject:
     def accept(self, visitor):
         raise WithStackTraceException()
@@ -1188,8 +1189,6 @@ class TestInterpreter(unittest.TestCase):
         except InterpreterException:
             self.assertEqual(True, False, 'Program must execute!')
 
-    # self.stack.scope_stack[0].stack[1]['a'] is \
-    # self.stack.scope_stack[1].stack[0]['a']
 
 if __name__ == '__main__':
     unittest.main()
