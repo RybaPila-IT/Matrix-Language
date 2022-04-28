@@ -134,18 +134,41 @@ class Interpreter:
         pass
 
     def evaluate_assign_statement(self, assign_statement):
-        # Possible options are assignment with index operator
-        # or simple assignment.
         try:
             assign_statement.expression.accept(self)
             result = self.result
-            variable = self.stack.get_variable(assign_statement.identifier)
-            self.__check_variables_types_matching(variable, result, allow_undefined=True)
-            # TODO (radek.r) Add logic handling possible indexing operator.
-            # If the check passed, update variable.
-            self.stack.set_variable(assign_statement.identifier, result)
+            variable = self.stack.get_variable(assign_statement.identifier.name)
+            if assign_statement.identifier.index_operator is not None:
+                self.__modify_variable_with_index_operator(variable, assign_statement.identifier.index_operator, result)
+            else:
+                self.__check_variables_types_matching(variable, result, for_assignment=True)
+                self.stack.set_variable(assign_statement.identifier.name, result)
         except WithStackTraceException as e:
             e.stack.append('evaluate assign statement')
+            raise e
+
+    def __modify_variable_with_index_operator(self, variable, index_operator, result):
+        try:
+            if variable.type is not _VariableType.MATRIX:
+                raise InvalidTypeException(variable.type)
+            if result.type not in [_VariableType.MATRIX, _VariableType.NUMBER]:
+                raise InvalidTypeException(result.type)
+
+            first, second = self.__evaluate_selectors(index_operator)
+
+            if first.type == _VariableType.DOTS and second.type == _VariableType.DOTS:
+                variable.value[:, :] = result.value
+            elif first.type == _VariableType.NUMBER and second.type == _VariableType.DOTS:
+                variable.value[first.value, :] = result.value
+            elif first.type == _VariableType.DOTS and second.type == _VariableType.NUMBER:
+                variable.value[:, second.value] = result.value
+            else:
+                variable.value[first.value, second.value] = result.value
+
+        except ValueError as e:
+            raise IndexException(e)
+        except WithStackTraceException as e:
+            e.stack.append('modify variable by index operator')
             raise e
 
     def evaluate_additive_expression(self, add_expression):
@@ -170,18 +193,19 @@ class Interpreter:
             raise e
 
     @staticmethod
-    def __check_variables_types_matching(left, right, allow_undefined=False):
+    def __check_variables_types_matching(left, right, for_assignment=False):
         # Special case for the assignment statement.
-        if allow_undefined and left.type == _VariableType.UNDEFINED:
-            return True
-        if left.type == _VariableType.STRING or right.type == _VariableType.STRING:
-            raise InvalidTypeException(_VariableType.STRING)
+        if for_assignment and left.type == _VariableType.UNDEFINED and right.type != _VariableType.UNDEFINED:
+            return
+        # Normally, we do not allow undefined variables to appear.
         if left.type == _VariableType.UNDEFINED or right.type == _VariableType.UNDEFINED:
-            raise InvalidTypeException(_VariableType.UNDEFINED)
+            raise UndefinedVariableException()
         if left.type == right.type:
-            return True
-        if left.type == _VariableType.MATRIX and right.type == _VariableType.NUMBER:
-            return True
+            return
+        # Matrix + Number and Matrix * Number is ok for expressions,
+        # but for assignment types must be the same on both sides.
+        if not for_assignment and left.type == _VariableType.MATRIX and right.type == _VariableType.NUMBER:
+            return
         # Any other combinations of types are forbidden.
         raise TypesMismatchException(left.type, right.type)
 

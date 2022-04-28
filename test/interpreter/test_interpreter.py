@@ -628,8 +628,8 @@ class TestInterpreter(unittest.TestCase):
         ]
         errors = [
             WithStackTraceException,
-            InvalidTypeException,
-            InvalidTypeException,
+            TypesMismatchException,
+            UndefinedVariableException,
             TypesMismatchException,
             MatrixDimensionsMismatchException,
             TypesMismatchException,
@@ -695,13 +695,186 @@ class TestInterpreter(unittest.TestCase):
         ]
         errors = [
             WithStackTraceException,
-            InvalidTypeException,
-            InvalidTypeException
+            TypesMismatchException,
+            UndefinedVariableException
         ]
 
         for add_expression, error in zip(add_expressions, errors):
             with self.assertRaises(error):
                 interpreter.evaluate_additive_expression(add_expression)
+
+    def test_no_indexing_assign_statement_evaluation(self):
+        """
+        Tests assign statement evaluation WITHOUT usage of indexing operator.
+
+        Test cases are:
+            - Assigning the Number to defined variable
+            - Assigning the Number to undefined variable
+            - Assigning the String to defined variable
+            - Assigning the String to undefined variable
+            - Assigning the Matrix to defined variable
+            - Assigning the Matrix to undefined variable
+        """
+        interpreter = Interpreter(None)
+        inits = [
+            {'i': _Variable(_VariableType.NUMBER, 24)},
+            {'i': _Variable(_VariableType.STRING, 'Lorem ipsum')},
+            {'i': _Variable(_VariableType.MATRIX, np.array([[1, 2, 3]]))}
+        ]
+        assign_statements = [
+            (
+                AssignStatement(Identifier('i'), NumberLiteral(42)),
+                AssignStatement(Identifier('j'), NumberLiteral(42))
+            ),
+            (
+                AssignStatement(Identifier('i'), StringLiteral('Hello world!')),
+                AssignStatement(Identifier('j'), StringLiteral('Hello world!'))
+            ),
+            (
+                AssignStatement(Identifier('i'), MatrixLiteral([NumberLiteral(12)], [])),
+                AssignStatement(Identifier('j'), MatrixLiteral([NumberLiteral(12)], []))
+            )
+        ]
+        expected_results = [
+            _Variable(_VariableType.NUMBER, 42),
+            _Variable(_VariableType.STRING, 'Hello world!'),
+            _Variable(_VariableType.MATRIX, np.array([[12]]))
+        ]
+
+        for init, assign_statement_pair, expected in zip(inits, assign_statements, expected_results):
+            function_stack = _FunctionStack()
+            function_stack.open_context(init)
+            interpreter.stack = function_stack
+            interpreter.evaluate_assign_statement(assign_statement_pair[0])
+            self.assertEqual(expected, init[assign_statement_pair[0].identifier.name])
+            interpreter.evaluate_assign_statement(assign_statement_pair[1])
+            self.assertEqual(expected, init[assign_statement_pair[1].identifier.name])
+
+    def test_invalid_no_indexing_assign_statement_evaluation(self):
+        """
+        Tests invalid assign statement evaluation WITHOUT usage of indexing operator.
+
+        Test case is types mismatch for Matrix and Number.
+        """
+        init = {
+            'i': _Variable(_VariableType.MATRIX, np.array([[12, 42]]))
+        }
+        assign_statement = AssignStatement(Identifier('i'), NumberLiteral(12))
+        function_stack = _FunctionStack()
+        function_stack.open_context(init)
+        interpreter = Interpreter(None)
+        interpreter.stack = function_stack
+        with self.assertRaises(TypesMismatchException):
+            interpreter.evaluate_assign_statement(assign_statement)
+
+    def test_indexing_assign_statement_evaluation(self):
+        """
+        Tests assign statement evaluation WITH usage of indexing operator.
+
+        Test cases are:
+            - Assigning single number
+            - Assigning row
+            - Assigning column
+            - Assigning all matrix values
+        """
+        interpreter = Interpreter(None)
+        init = {
+            'i': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'j': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'k': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'l': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+        }
+        function_stack = _FunctionStack()
+        function_stack.open_context(init)
+        interpreter.stack = function_stack
+        assign_statements = [
+            AssignStatement(
+                Identifier('i', IndexOperator(NumberLiteral(0), NumberLiteral(0))),
+                NumberLiteral(42)
+            ),
+            AssignStatement(
+                Identifier('j', IndexOperator(NumberLiteral(0), DotsSelect())),
+                MatrixLiteral([NumberLiteral(12), NumberLiteral(42)], [','])
+            ),
+            AssignStatement(
+                Identifier('k', IndexOperator(DotsSelect(), NumberLiteral(0))),
+                MatrixLiteral([NumberLiteral(12), NumberLiteral(42)], [','])
+            ),
+            AssignStatement(
+                Identifier('l', IndexOperator(DotsSelect(), DotsSelect())),
+                MatrixLiteral(
+                    [NumberLiteral(12), NumberLiteral(42), NumberLiteral(12), NumberLiteral(42)],
+                    [',', ';', ','])
+            ),
+        ]
+        expected_results = [
+            _Variable(_VariableType.MATRIX, np.array([[42, 2], [3, 4]])),
+            _Variable(_VariableType.MATRIX, np.array([[12, 42], [3, 4]])),
+            _Variable(_VariableType.MATRIX, np.array([[12, 2], [42, 4]])),
+            _Variable(_VariableType.MATRIX, np.array([[12, 42], [12, 42]]))
+        ]
+        identifiers = [
+            'i',
+            'j',
+            'k',
+            'l'
+        ]
+
+        for assign_statement, expected, ident in zip(assign_statements, expected_results, identifiers):
+            interpreter.evaluate_assign_statement(assign_statement)
+            self.assertEqual(expected, interpreter.stack.get_variable(ident))
+
+    def test_invalid_indexing_assign_statement_evaluation(self):
+        """
+        Tests invalid assign statement evaluation WITH usage of indexing operator.
+
+        Test cases are:
+            - Indexing not a Matrix
+            - Assigning String
+            - Mismatch of vector assigned
+            - Selectors evaluation error
+        """
+        interpreter = Interpreter(None)
+        init = {
+            'i': _Variable(_VariableType.NUMBER, 32),
+            'j': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'k': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'l': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+        }
+        function_stack = _FunctionStack()
+        function_stack.open_context(init)
+        interpreter.stack = function_stack
+        assign_statements = [
+            AssignStatement(
+                Identifier('i', IndexOperator(NumberLiteral(0), NumberLiteral(0))),
+                NumberLiteral(42)
+            ),
+            AssignStatement(
+                Identifier('j', IndexOperator(NumberLiteral(0), NumberLiteral(0))),
+                StringLiteral('Lorem ipsum')
+            ),
+            AssignStatement(
+                Identifier('k', IndexOperator(DotsSelect(), NumberLiteral(0))),
+                MatrixLiteral([NumberLiteral(12), NumberLiteral(42), NumberLiteral(36)], [',', ','])
+            ),
+            AssignStatement(
+                Identifier('l', IndexOperator(_ErrorObject(), DotsSelect())),
+                MatrixLiteral(
+                    [NumberLiteral(12), NumberLiteral(42), NumberLiteral(12), NumberLiteral(42)],
+                    [',', ';', ','])
+            ),
+        ]
+        errors = [
+            InvalidTypeException,
+            InvalidTypeException,
+            IndexException,
+            WithStackTraceException
+        ]
+
+        for assign_statement, error in zip(assign_statements, errors):
+            with self.assertRaises(error):
+                interpreter.evaluate_assign_statement(assign_statement)
+
 
 if __name__ == '__main__':
     unittest.main()

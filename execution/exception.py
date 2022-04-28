@@ -60,3 +60,8 @@ class IndexException(WithStackTraceException):
     def __init__(self, index_error):
         super().__init__()
         self.error = index_error
+
+
+class UndefinedVariableException(WithStackTraceException):
+    def __init__(self):
+        super().__init__()
