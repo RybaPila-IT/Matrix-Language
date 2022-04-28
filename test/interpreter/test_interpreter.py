@@ -589,6 +589,7 @@ class TestInterpreter(unittest.TestCase):
         Test cases are:
             - Atomic expression results in error
             - Atomic expression evaluates into string
+            - Atomic expression evaluates into undefined
             - Number * Matrix
             - Matrix dimensions mismatch while multiplying
             - Matrix / Matrix
@@ -599,6 +600,7 @@ class TestInterpreter(unittest.TestCase):
         mul_expressions = [
             MultiplicativeExpression([NumberLiteral(42), _ErrorObject()], ['*']),
             MultiplicativeExpression([NumberLiteral(42), StringLiteral('Lorem ipsum')], ['/']),
+            MultiplicativeExpression([NumberLiteral(42), Identifier('i')], ['/']),
             MultiplicativeExpression([
                 NumberLiteral(42),
                 MatrixLiteral(
@@ -627,6 +629,7 @@ class TestInterpreter(unittest.TestCase):
         errors = [
             WithStackTraceException,
             InvalidTypeException,
+            InvalidTypeException,
             TypesMismatchException,
             MatrixDimensionsMismatchException,
             TypesMismatchException,
@@ -637,6 +640,68 @@ class TestInterpreter(unittest.TestCase):
             with self.assertRaises(error):
                 interpreter.evaluate_multiplicative_expression(mul_expression)
 
+    def test_additive_expression_evaluation(self):
+        """
+        Tests additive expressions evaluation.
+
+        Test cases are:
+            - Number add and subtract
+            - Matrix add and subtract
+            - Matrix +/- Number
+        """
+        interpreter = Interpreter(None)
+        add_expressions = [
+            AdditiveExpression([NumberLiteral(42), NumberLiteral(12)], ['+']),
+            AdditiveExpression([NumberLiteral(42), NumberLiteral(12)], ['-']),
+            AdditiveExpression([
+                MatrixLiteral([NumberLiteral(12), NumberLiteral(42)], [',']),
+                MatrixLiteral([NumberLiteral(2), NumberLiteral(2)], [','])
+            ], ['+']),
+            AdditiveExpression([
+                MatrixLiteral([NumberLiteral(12), NumberLiteral(42)], [',']),
+                MatrixLiteral([NumberLiteral(2), NumberLiteral(2)], [','])
+            ], ['-']),
+            AdditiveExpression([MatrixLiteral([NumberLiteral(12), NumberLiteral(42)], [',']), NumberLiteral(1)], ['+']),
+            AdditiveExpression([MatrixLiteral([NumberLiteral(12), NumberLiteral(42)], [',']), NumberLiteral(1)], ['-']),
+        ]
+        expected_results = [
+            _Variable(_VariableType.NUMBER, 54),
+            _Variable(_VariableType.NUMBER, 30),
+            _Variable(_VariableType.MATRIX, np.array([[14, 44]])),
+            _Variable(_VariableType.MATRIX, np.array([[10, 40]])),
+            _Variable(_VariableType.MATRIX, np.array([[13, 43]])),
+            _Variable(_VariableType.MATRIX, np.array([[11, 41]]))
+        ]
+
+        for add_expression, expected in zip(add_expressions, expected_results):
+            interpreter.evaluate_additive_expression(add_expression)
+            self.assertEqual(expected, interpreter.result)
+
+    def test_invalid_additive_expression_evaluation(self):
+        """
+        Tests invalid additive expressions evaluation.
+
+        Test cases are:
+            - Mul expression results in error
+            - Mul expression evaluates into string
+            - Mul expression evaluates into undefined
+        """
+        interpreter = Interpreter(None)
+        # Start of test cases.
+        add_expressions = [
+            AdditiveExpression([NumberLiteral(42), _ErrorObject()], ['*']),
+            AdditiveExpression([NumberLiteral(42), StringLiteral('Lorem ipsum')], ['/']),
+            AdditiveExpression([NumberLiteral(42), Identifier('i')], ['/'])
+        ]
+        errors = [
+            WithStackTraceException,
+            InvalidTypeException,
+            InvalidTypeException
+        ]
+
+        for add_expression, error in zip(add_expressions, errors):
+            with self.assertRaises(error):
+                interpreter.evaluate_additive_expression(add_expression)
 
 if __name__ == '__main__':
     unittest.main()
