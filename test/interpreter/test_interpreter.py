@@ -12,6 +12,18 @@ class _ErrorObject:
         raise WithStackTraceException()
 
 
+class _Evaluator:
+    def __init__(self, value):
+        self.visited = False
+        self.value = value
+
+    def accept(self, visitor):
+        self.visited = True
+        # Simulate evaluation of the object by setting the result
+        # in interpreter visitor object.
+        visitor.result = self.value
+
+
 class TestInterpreter(unittest.TestCase):
     def test_number_literal_evaluation(self):
         """
@@ -324,16 +336,26 @@ class TestInterpreter(unittest.TestCase):
         # Start of test cases.
         rel_conditions = [
             # Matrix tests.
-            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '<', MatrixLiteral([NumberLiteral(2)], [])),
-            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '>', MatrixLiteral([NumberLiteral(2)], [])),
-            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '>=', MatrixLiteral([NumberLiteral(2)], [])),
-            RelationCondition(False, MatrixLiteral([NumberLiteral(2)], []), '>=', MatrixLiteral([NumberLiteral(2)], [])),
-            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '<=', MatrixLiteral([NumberLiteral(2)], [])),
-            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '<=', MatrixLiteral([NumberLiteral(1)], [])),
-            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '==', MatrixLiteral([NumberLiteral(2)], [])),
-            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '==', MatrixLiteral([NumberLiteral(1)], [])),
-            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '!=', MatrixLiteral([NumberLiteral(2)], [])),
-            RelationCondition(False, MatrixLiteral([NumberLiteral(2)], []), '!=', MatrixLiteral([NumberLiteral(2)], [])),
+            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '<',
+                              MatrixLiteral([NumberLiteral(2)], [])),
+            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '>',
+                              MatrixLiteral([NumberLiteral(2)], [])),
+            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '>=',
+                              MatrixLiteral([NumberLiteral(2)], [])),
+            RelationCondition(False, MatrixLiteral([NumberLiteral(2)], []), '>=',
+                              MatrixLiteral([NumberLiteral(2)], [])),
+            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '<=',
+                              MatrixLiteral([NumberLiteral(2)], [])),
+            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '<=',
+                              MatrixLiteral([NumberLiteral(1)], [])),
+            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '==',
+                              MatrixLiteral([NumberLiteral(2)], [])),
+            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '==',
+                              MatrixLiteral([NumberLiteral(1)], [])),
+            RelationCondition(False, MatrixLiteral([NumberLiteral(1)], []), '!=',
+                              MatrixLiteral([NumberLiteral(2)], [])),
+            RelationCondition(False, MatrixLiteral([NumberLiteral(2)], []), '!=',
+                              MatrixLiteral([NumberLiteral(2)], [])),
             # Number tests.
             RelationCondition(False, NumberLiteral(1), '<', NumberLiteral(2)),
             RelationCondition(False, NumberLiteral(1), '>', NumberLiteral(2)),
@@ -402,6 +424,41 @@ class TestInterpreter(unittest.TestCase):
         for rel_condition, error in zip(rel_conditions, errors):
             with self.assertRaises(error):
                 interpreter.evaluate_relation_condition(rel_condition)
+
+    def test_and_condition_evaluation(self):
+        """
+        Tests additive conditions evaluation.
+
+        Test cases are:
+            - All conditions evaluate to True.
+            - Some condition evaluates to False.
+        """
+        interpreter = Interpreter(None)
+        # Start of test cases.
+        and_conditions = [
+            AndCondition([_Evaluator(True), _Evaluator(True), _Evaluator(True)]),
+            AndCondition([_Evaluator(True), _Evaluator(False), _Evaluator(True)])
+        ]
+        evaluator_visited_states = [
+            [True, True, True],
+            [True, True, False]
+        ]
+
+        for and_condition, states in zip(and_conditions, evaluator_visited_states):
+            interpreter.evaluate_and_condition(and_condition)
+            for e, state in zip(and_condition.rel_conditions, states):
+                self.assertEqual(state, e.visited)
+
+    def test_invalid_and_condition_evaluation(self):
+        """
+        Tests invalid and condition evaluation.
+
+        Test case is relation condition evaluation resulting in error.
+        """
+        interpreter = Interpreter(None)
+        and_condition = AndCondition([_ErrorObject()])
+        with self.assertRaises(WithStackTraceException):
+            interpreter.evaluate_and_condition(and_condition)
 
 
 if __name__ == '__main__':
