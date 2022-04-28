@@ -541,6 +541,102 @@ class TestInterpreter(unittest.TestCase):
             with self.assertRaises(error):
                 interpreter.evaluate_negated_atomic_expression(negated_Atomic_expr)
 
+    def test_multiplicative_expression_evaluation(self):
+        """
+        Tests multiplicative expressions evaluation.
+
+        Test cases are:
+            - Numbers multiplication and division
+            - Matrix multiplication
+            - Matrix by number multiplication and division
+        """
+        interpreter = Interpreter(None)
+        # Start of test cases.
+        mul_expressions = [
+            MultiplicativeExpression([NumberLiteral(42), NumberLiteral(12)], ['*']),
+            MultiplicativeExpression([NumberLiteral(42), NumberLiteral(2)], ['/']),
+            MultiplicativeExpression([
+                MatrixLiteral(
+                    [NumberLiteral(1), NumberLiteral(2), NumberLiteral(3), NumberLiteral(4)], [',', ';', ',']
+                ),
+                MatrixLiteral(
+                    [NumberLiteral(1), NumberLiteral(2), NumberLiteral(3), NumberLiteral(4)], [',', ';', ',']
+                )], ['*']
+            ),
+            MultiplicativeExpression([
+                MatrixLiteral([NumberLiteral(1), NumberLiteral(2)], [',']), NumberLiteral(2)], ['*']
+            ),
+            MultiplicativeExpression([
+                MatrixLiteral([NumberLiteral(1), NumberLiteral(2)], [',']), NumberLiteral(2)], ['/']
+            )
+        ]
+        expected_results = [
+            _Variable(_VariableType.NUMBER, 504),
+            _Variable(_VariableType.NUMBER, 21),
+            _Variable(_VariableType.MATRIX, np.array([[7, 10], [15, 22]])),
+            _Variable(_VariableType.MATRIX, np.array([[2, 4]])),
+            _Variable(_VariableType.MATRIX, np.array([[.5, 1]]))
+        ]
+
+        for mul_expression, expected in zip(mul_expressions, expected_results):
+            interpreter.evaluate_multiplicative_expression(mul_expression)
+            self.assertEqual(expected, interpreter.result)
+
+    def test_invalid_multiplicative_expression_evaluation(self):
+        """
+        Tests invalid multiplicative expressions evaluation.
+
+        Test cases are:
+            - Atomic expression results in error
+            - Atomic expression evaluates into string
+            - Number * Matrix
+            - Matrix dimensions mismatch while multiplying
+            - Matrix / Matrix
+            - Division by 0
+        """
+        interpreter = Interpreter(None)
+        # Start of test cases.
+        mul_expressions = [
+            MultiplicativeExpression([NumberLiteral(42), _ErrorObject()], ['*']),
+            MultiplicativeExpression([NumberLiteral(42), StringLiteral('Lorem ipsum')], ['/']),
+            MultiplicativeExpression([
+                NumberLiteral(42),
+                MatrixLiteral(
+                    [NumberLiteral(1), NumberLiteral(2), NumberLiteral(3), NumberLiteral(4)], [',', ';', ',']
+                )], ['*']
+            ),
+            MultiplicativeExpression([
+                MatrixLiteral(
+                    [NumberLiteral(1), NumberLiteral(2), NumberLiteral(3),
+                     NumberLiteral(4), NumberLiteral(5), NumberLiteral(6)], [',', ',', ';', ',', ',']
+                ),
+                MatrixLiteral(
+                    [NumberLiteral(1), NumberLiteral(2), NumberLiteral(3), NumberLiteral(4)], [',', ';', ',']
+                )], ['*']
+            ),
+            MultiplicativeExpression([
+                MatrixLiteral(
+                    [NumberLiteral(1), NumberLiteral(2), NumberLiteral(3), NumberLiteral(4)], [',', ';', ',']
+                ),
+                MatrixLiteral(
+                    [NumberLiteral(1), NumberLiteral(2), NumberLiteral(3), NumberLiteral(4)], [',', ';', ',']
+                )], ['/']
+            ),
+            MultiplicativeExpression([NumberLiteral(12), NumberLiteral(0)], ['/'])
+        ]
+        errors = [
+            WithStackTraceException,
+            InvalidTypeException,
+            TypesMismatchException,
+            MatrixDimensionsMismatchException,
+            TypesMismatchException,
+            ZeroDivisionException
+        ]
+
+        for mul_expression, error in zip(mul_expressions, errors):
+            with self.assertRaises(error):
+                interpreter.evaluate_multiplicative_expression(mul_expression)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -175,7 +175,9 @@ class Interpreter:
         if allow_undefined and left.type == _VariableType.UNDEFINED:
             return True
         if left.type == _VariableType.STRING or right.type == _VariableType.STRING:
-            raise StringUsageException()
+            raise InvalidTypeException(_VariableType.STRING)
+        if left.type == _VariableType.UNDEFINED or right.type == _VariableType.UNDEFINED:
+            raise InvalidTypeException(_VariableType.UNDEFINED)
         if left.type == right.type:
             return True
         if left.type == _VariableType.MATRIX and right.type == _VariableType.NUMBER:

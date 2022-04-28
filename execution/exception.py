@@ -26,11 +26,6 @@ class FunctionArgumentsMismatchException(WithStackTraceException):
         self.stack.insert(0, (identifier, expected, received))
 
 
-class StringUsageException(WithStackTraceException):
-    def __init__(self):
-        super().__init__()
-
-
 class TypesMismatchException(WithStackTraceException):
     def __init__(self, left, right):
         super().__init__()
