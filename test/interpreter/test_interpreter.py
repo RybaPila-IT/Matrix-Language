@@ -427,7 +427,7 @@ class TestInterpreter(unittest.TestCase):
 
     def test_and_condition_evaluation(self):
         """
-        Tests additive conditions evaluation.
+        Tests and conditions evaluation.
 
         Test cases are:
             - All conditions evaluate to True.
@@ -459,6 +459,41 @@ class TestInterpreter(unittest.TestCase):
         and_condition = AndCondition([_ErrorObject()])
         with self.assertRaises(WithStackTraceException):
             interpreter.evaluate_and_condition(and_condition)
+
+    def test_or_condition_evaluation(self):
+        """
+        Tests or conditions evaluation.
+
+        Test cases are:
+            - All conditions evaluate to False.
+            - Some condition evaluates to True.
+        """
+        interpreter = Interpreter(None)
+        # Start of test cases.
+        or_conditions = [
+            OrCondition([_Evaluator(False), _Evaluator(False), _Evaluator(False)]),
+            OrCondition([_Evaluator(False), _Evaluator(True), _Evaluator(False)])
+        ]
+        evaluator_visited_states = [
+            [True, True, True],
+            [True, True, False]
+        ]
+
+        for or_condition, states in zip(or_conditions, evaluator_visited_states):
+            interpreter.evaluate_or_condition(or_condition)
+            for e, state in zip(or_condition.and_conditions, states):
+                self.assertEqual(state, e.visited)
+
+    def test_invalid_or_condition_evaluation(self):
+        """
+        Tests invalid or condition evaluation.
+
+        Test case is and condition evaluation resulting in error.
+        """
+        interpreter = Interpreter(None)
+        or_condition = OrCondition([_ErrorObject()])
+        with self.assertRaises(WithStackTraceException):
+            interpreter.evaluate_or_condition(or_condition)
 
 
 if __name__ == '__main__':
