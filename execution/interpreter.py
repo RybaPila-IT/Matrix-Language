@@ -281,12 +281,19 @@ class Interpreter:
         except WithStackTraceException as e:
             e.stack.append('evaluate rel condition')
             raise e
+        # Handle possible relation condition negation
+        self.result = not self.result if rel_condition.negated else self.result
 
     def __evaluate_result_into_bool(self):
         if self.result.type == _VariableType.MATRIX:
-            self.result = not np.any(self.result.value)
-        elif self.result.type == _VariableType.NUMBER:
-            self.result = self.result.value == 0
+            self.result = np.any(self.result.value)
+            return
+        if self.result.type == _VariableType.NUMBER:
+            self.result = self.result.value != 0
+            return
+        if self.result.type == _VariableType.STRING:
+            self.result = self.result.value != ''
+            return
 
         raise InvalidTypeException(self.result.type)
 
@@ -304,13 +311,13 @@ class Interpreter:
     def __evaluate_matrix_comparison_into_bool(self, left, right, operator):
         match operator:
             case '<':
-                self.result = np.all(np.less(left.value, right.value) is True)
+                self.result = np.all(np.less(left.value, right.value))
             case '>':
-                self.result = np.all(np.greater(left.value, right.value) is True)
+                self.result = np.all(np.greater(left.value, right.value))
             case '>=':
-                self.result = np.all(np.greater_equal(left.value, right.value) is True)
+                self.result = np.all(np.greater_equal(left.value, right.value))
             case '<=':
-                self.result = np.all(np.less_equal(left.value, right.value) is True)
+                self.result = np.all(np.less_equal(left.value, right.value))
             case '==':
                 self.result = np.array_equal(left.value, right.value)
             case '!=':
