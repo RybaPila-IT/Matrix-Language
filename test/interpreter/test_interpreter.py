@@ -984,6 +984,35 @@ class TestInterpreter(unittest.TestCase):
             self.assertEqual(0, until_statement.condition.count)
             self.assertEqual(expected, until_statement.statement_block.count)
 
+    def test_statement_block_evaluation(self):
+        """
+        Tests statement block evaluation.
+
+        Test cases are:
+            - All blocks evaluate
+            - Not all blocks evaluate
+        """
+        interpreter = Interpreter(None)
+        statement_blocks = [
+            StatementBlock([_VisitCounter(), _VisitCounter(), _VisitCounter()]),
+            StatementBlock([_VisitCounter(), ReturnStatement(), _VisitCounter()]),
+        ]
+        expected_results = [
+            (1, 1, 1),
+            (1, None, 0)
+        ]
+        returns = [
+            False,
+            True
+        ]
+
+        for statement_block, expected, ret in zip(statement_blocks, expected_results, returns):
+            interpreter.evaluate_statement_block(statement_block)
+            self.assertEqual(ret, interpreter.returns)
+            for i, result in enumerate(expected):
+                if result is not None:
+                    self.assertEqual(result, statement_block.statements[i].count)
+
 
 if __name__ == '__main__':
     unittest.main()
