@@ -7,16 +7,16 @@ class FunctionDuplicationException(Exception):
         self.identifier = identifier
 
 
-class UnexpectedTokenException(Exception):
-    def __init__(self, token):
-        super().__init__()
-        self.token = token
-
-
 class WithContextException(Exception):
     def __init__(self, context):
         super().__init__()
         self.context = context
+
+
+class UnexpectedTokenException(WithContextException):
+    def __init__(self, token, context):
+        super().__init__(context)
+        self.token = token
 
 
 class MissingConditionException(WithContextException):

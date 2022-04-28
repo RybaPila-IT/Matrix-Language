@@ -3,6 +3,7 @@ from enum import Enum, auto
 
 class SyntacticContext(Enum):
     FunctionDefinition = auto(),
+    StatementBlock = auto(),
     Parameters = auto(),
     IfStatement = auto(),
     UntilStatement = auto(),
