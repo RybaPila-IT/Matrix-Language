@@ -32,6 +32,16 @@ class _VisitCounter:
         self.count += 1
 
 
+class _CountEvaluator:
+    def __init__(self, count):
+        self.count = count
+
+    def accept(self, visitor):
+        # Simulate some condition evaluation.
+        visitor.result = self.count > 0
+        self.count = max(0, self.count - 1)
+
+
 class TestInterpreter(unittest.TestCase):
     def test_number_literal_evaluation(self):
         """
@@ -943,9 +953,36 @@ class TestInterpreter(unittest.TestCase):
 
         for if_statement, expected in zip(if_statements, expected_results):
             interpreter.evaluate_if_statement(if_statement)
+            self.assertEqual(True, if_statement.condition.visited)
             self.assertEqual(expected[0], if_statement.statement_block.count)
             if expected[1] is not None:
                 self.assertEqual(expected[1], if_statement.else_statement.count)
+
+    def test_until_statement_evaluation(self):
+        """
+        Tests until statement evaluation.
+
+        Test cases are:
+            - No loop execution
+            - 1 time loop execution
+            - Multiple times loop execution
+        """
+        interpreter = Interpreter(None)
+        until_statements = [
+            UntilStatement(_CountEvaluator(0), _VisitCounter()),
+            UntilStatement(_CountEvaluator(1), _VisitCounter()),
+            UntilStatement(_CountEvaluator(42), _VisitCounter()),
+        ]
+        expected_results = [
+            0,
+            1,
+            42
+        ]
+
+        for until_statement, expected in zip(until_statements, expected_results):
+            interpreter.evaluate_until_statement(until_statement)
+            self.assertEqual(0, until_statement.condition.count)
+            self.assertEqual(expected, until_statement.statement_block.count)
 
 
 if __name__ == '__main__':
