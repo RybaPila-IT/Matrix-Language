@@ -24,6 +24,14 @@ class _Evaluator:
         visitor.result = self.value
 
 
+class _VisitCounter:
+    def __init__(self):
+        self.count = 0
+
+    def accept(self, _):
+        self.count += 1
+
+
 class TestInterpreter(unittest.TestCase):
     def test_number_literal_evaluation(self):
         """
@@ -909,6 +917,35 @@ class TestInterpreter(unittest.TestCase):
         return_statement = ReturnStatement(_ErrorObject())
         with self.assertRaises(WithStackTraceException):
             interpreter.evaluate_return_statement(return_statement)
+
+    def test_if_statement_evaluation(self):
+        """
+        Tests if statement evaluation.
+
+        Test cases are:
+            - True condition and if block execution
+            - False condition and no block execution
+            - False condition and else block execution
+        """
+        interpreter = Interpreter(None)
+        if_statements = [
+            IfStatement(_Evaluator(True), _VisitCounter()),
+            IfStatement(_Evaluator(False), _VisitCounter()),
+            IfStatement(_Evaluator(True), _VisitCounter(), _VisitCounter()),
+            IfStatement(_Evaluator(False), _VisitCounter(), _VisitCounter())
+        ]
+        expected_results = [
+            (1, None),
+            (0, None),
+            (1, 0),
+            (0, 1)
+        ]
+
+        for if_statement, expected in zip(if_statements, expected_results):
+            interpreter.evaluate_if_statement(if_statement)
+            self.assertEqual(expected[0], if_statement.statement_block.count)
+            if expected[1] is not None:
+                self.assertEqual(expected[1], if_statement.else_statement.count)
 
 
 if __name__ == '__main__':
