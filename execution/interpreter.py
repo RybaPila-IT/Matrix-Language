@@ -84,6 +84,8 @@ class Interpreter:
         try:
             if return_statement.expression is not None:
                 return_statement.expression.accept(self)
+            else:
+                self.result = _Variable(_VariableType.UNDEFINED, None)
             self.returns = True
         except WithStackTraceException as e:
             e.stack.append('evaluate return statement')

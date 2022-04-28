@@ -875,6 +875,41 @@ class TestInterpreter(unittest.TestCase):
             with self.assertRaises(error):
                 interpreter.evaluate_assign_statement(assign_statement)
 
+    def test_return_statement_evaluation(self):
+        """
+        Tests return statement evaluation.
+
+        Test cases are:
+            - Plain return
+            - Return with value
+        """
+        interpreter = Interpreter(None)
+        return_statements = [
+            ReturnStatement(),
+            ReturnStatement(NumberLiteral(42))
+        ]
+        expected_results = [
+            _Variable(_VariableType.UNDEFINED, None),
+            _Variable(_VariableType.NUMBER, 42)
+        ]
+
+        for return_statement, expected in zip(return_statements, expected_results):
+            interpreter.returns = False
+            interpreter.evaluate_return_statement(return_statement)
+            self.assertEqual(expected, interpreter.result)
+            self.assertEqual(True, interpreter.returns)
+
+    def test_invalid_return_statement_evaluation(self):
+        """
+        Tests invalid return statement evaluation.
+
+        Test case is expression evaluation resulting in error.
+        """
+        interpreter = Interpreter(None)
+        return_statement = ReturnStatement(_ErrorObject())
+        with self.assertRaises(WithStackTraceException):
+            interpreter.evaluate_return_statement(return_statement)
+
 
 if __name__ == '__main__':
     unittest.main()
