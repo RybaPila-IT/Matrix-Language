@@ -495,6 +495,52 @@ class TestInterpreter(unittest.TestCase):
         with self.assertRaises(WithStackTraceException):
             interpreter.evaluate_or_condition(or_condition)
 
+    def test_negated_atomic_expression_evaluation(self):
+        """
+        Tests negated atomic expression evaluation.
+
+        Test cases are:
+            - Matrix negation.
+            - Number negation.
+        """
+        interpreter = Interpreter(None)
+        # Start of test cases.
+        negated_atomic_expressions = [
+            NegatedAtomicExpression(MatrixLiteral([NumberLiteral(42), NumberLiteral(12)], [','])),
+            NegatedAtomicExpression(NumberLiteral(42))
+        ]
+        expected_results = [
+            _Variable(_VariableType.MATRIX, np.array([[-42, -12]])),
+            _Variable(_VariableType.NUMBER, -42)
+        ]
+
+        for negated_atomic_expr, expected in zip(negated_atomic_expressions, expected_results):
+            interpreter.evaluate_negated_atomic_expression(negated_atomic_expr)
+            self.assertEqual(expected, interpreter.result)
+
+    def test_invalid_negated_atomic_expression_evaluation(self):
+        """
+        Tests invalid negated atomic expression evaluation.
+
+        Test cases are:
+            - Invalid type of atomic expression evaluation
+            - Atomic expression evaluation error
+        """
+        interpreter = Interpreter(None)
+        # Start of test cases.
+        negated_atomic_expressions = [
+            NegatedAtomicExpression(StringLiteral('Lorem ipsum')),
+            NegatedAtomicExpression(_ErrorObject())
+        ]
+        errors = [
+            InvalidTypeException,
+            WithStackTraceException
+        ]
+
+        for negated_Atomic_expr, error in zip(negated_atomic_expressions, errors):
+            with self.assertRaises(error):
+                interpreter.evaluate_negated_atomic_expression(negated_Atomic_expr)
+
 
 if __name__ == '__main__':
     unittest.main()

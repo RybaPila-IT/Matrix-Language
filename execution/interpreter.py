@@ -240,9 +240,11 @@ class Interpreter:
             expression.atomic_expression.accept(self)
             if self.result.type == _VariableType.MATRIX:
                 self.result.value = np.negative(self.result.value)
-            elif self.result.type == _VariableType.NUMBER:
+                return
+            if self.result.type == _VariableType.NUMBER:
                 self.result.value = - self.result.value
-            # TODO (radek.r) Think about throwing an error here.
+                return
+            raise InvalidTypeException(self.result.type)
         except WithStackTraceException as e:
             e.stack.append('evaluate negated atomic expression')
             raise e
