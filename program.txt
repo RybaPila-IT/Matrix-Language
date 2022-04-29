@@ -2,9 +2,13 @@ fib(n) {
     if (n == 1) {
         return 1
     }
-    return fib(n-1)
+    if (!n or n < 0) {
+        return 0
+    }
+    return fib(n-1) + fib(n-2)
 }
 
 main() {
-    print(fib(10))
+    a = cin()
+    print(fib(a))
 }

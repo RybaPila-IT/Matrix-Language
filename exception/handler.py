@@ -85,7 +85,8 @@ class ExceptionHandler:
                 ExceptionHandler.__print_exception_line(source, exception.received.position)
         elif type(exception) is MissingBracketException:
             e_print(
-                f'Error: Expected bracket {exception.expected} but got {exception.token} in context {exception.context}'
+                f'Error: Expected bracket {exception.expected} but got {exception.received} '
+                f'in context {exception.context}'
             )
             if source is not None:
                 ExceptionHandler.__print_exception_line(source, exception.received.position)
@@ -103,7 +104,6 @@ class ExceptionHandler:
         if type(exception) is MissingMainException:
             e_print(f'Error: Missing main function')
         elif type(exception) is WithStackTraceException:
-            e_print(f'Error: Printing stack')
             ExceptionHandler.__print_exception_stack(exception)
         elif type(exception) is UndefinedFunctionException:
             e_print(f'Error: Undefined function {exception.identifier}')
@@ -115,7 +115,7 @@ class ExceptionHandler:
             )
             ExceptionHandler.__print_exception_stack(exception)
         elif type(exception) is TypesMismatchException:
-            e_print(f'Error: Types mismatch; left {exception.left} right{exception.right}')
+            e_print(f'Error: Types mismatch; left {exception.left} right {exception.right}')
             ExceptionHandler.__print_exception_stack(exception)
         elif type(exception) is MatrixDimensionsMismatchException:
             e_print(

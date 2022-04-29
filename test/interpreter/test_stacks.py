@@ -1,7 +1,7 @@
 import unittest
 
-# noinspection PyProtectedMember
-from execution.interpreter import _FunctionStack, _ScopeStack, _Variable, _VariableType
+from execution.variable import Variable, VariableType
+from execution.stacks import FunctionStack, ScopeStack
 
 
 class TestFunctionStack(unittest.TestCase):
@@ -15,15 +15,15 @@ class TestFunctionStack(unittest.TestCase):
         """
         init_contexts = [
             {},
-            {'i': _Variable(_VariableType.NUMBER, 42)}
+            {'i': Variable(VariableType.NUMBER, 42)}
         ]
         expected_scope_stacks = [
-            [_ScopeStack(), _ScopeStack()],
-            [_ScopeStack(), _ScopeStack({'i': _Variable(_VariableType.NUMBER, 42)})]
+            [ScopeStack(), ScopeStack()],
+            [ScopeStack(), ScopeStack({'i': Variable(VariableType.NUMBER, 42)})]
         ]
 
         for init, expected in zip(init_contexts, expected_scope_stacks):
-            function_stack = _FunctionStack()
+            function_stack = FunctionStack()
             function_stack.open_context(init)
             self.assertEqual(expected, function_stack.scope_stack)
 
@@ -31,9 +31,9 @@ class TestFunctionStack(unittest.TestCase):
         """
         Tests function stack context closing.
         """
-        function_stack = _FunctionStack()
-        function_stack.scope_stack = [_ScopeStack(), _ScopeStack(), _ScopeStack()]
-        expected = [_ScopeStack(), _ScopeStack()]
+        function_stack = FunctionStack()
+        function_stack.scope_stack = [ScopeStack(), ScopeStack(), ScopeStack()]
+        expected = [ScopeStack(), ScopeStack()]
         function_stack.close_context()
         self.assertEqual(expected, function_stack.scope_stack)
 
@@ -43,7 +43,7 @@ class TestScopeStack(unittest.TestCase):
         """
         Tests new scope opening.
         """
-        scope_stack = _ScopeStack()
+        scope_stack = ScopeStack()
         expected_stack = [{}, {}]
         scope_stack.open_scope()
         self.assertEqual(expected_stack, scope_stack.stack)
@@ -52,7 +52,7 @@ class TestScopeStack(unittest.TestCase):
         """
         Tests scopes closing.
         """
-        scope_stack = _ScopeStack()
+        scope_stack = ScopeStack()
         scope_stack.stack = [{}, {}, {}]
         expected_stack = [{}, {}]
         scope_stack.close_scope()
@@ -68,24 +68,24 @@ class TestScopeStack(unittest.TestCase):
             - Variable is not present in scopes at all
         """
         stacks = [
-            [{}, {'i': _Variable(_VariableType.NUMBER, 42)}],
-            [{'i': _Variable(_VariableType.NUMBER, 42)}, {}, {}],
+            [{}, {'i': Variable(VariableType.NUMBER, 42)}],
+            [{'i': Variable(VariableType.NUMBER, 42)}, {}, {}],
             [{}, {}]
         ]
         expected_vars = [
-            _Variable(_VariableType.NUMBER, 42),
-            _Variable(_VariableType.NUMBER, 42),
-            _Variable(_VariableType.UNDEFINED, None)
+            Variable(VariableType.NUMBER, 42),
+            Variable(VariableType.NUMBER, 42),
+            Variable(VariableType.UNDEFINED, None)
         ]
         expected_stacks = [
-            [{}, {'i': _Variable(_VariableType.NUMBER, 42)}],
-            [{'i': _Variable(_VariableType.NUMBER, 42)}, {}, {}],
-            [{}, {'i': _Variable(_VariableType.UNDEFINED, None)}]
+            [{}, {'i': Variable(VariableType.NUMBER, 42)}],
+            [{'i': Variable(VariableType.NUMBER, 42)}, {}, {}],
+            [{}, {'i': Variable(VariableType.UNDEFINED, None)}]
         ]
         identifier = 'i'
 
         for stack, expected_var, expected_stack in zip(stacks, expected_vars, expected_stacks):
-            scope_stack = _ScopeStack()
+            scope_stack = ScopeStack()
             scope_stack.stack = stack
             result = scope_stack.get_variable(identifier)
             self.assertEqual(expected_var, result)
@@ -101,20 +101,20 @@ class TestScopeStack(unittest.TestCase):
             - Variable is not present in the scope stack
         """
         stacks = [
-            [{}, {'i': _Variable(_VariableType.NUMBER, 42)}],
-            [{'i': _Variable(_VariableType.NUMBER, 42)}, {}, {}],
+            [{}, {'i': Variable(VariableType.NUMBER, 42)}],
+            [{'i': Variable(VariableType.NUMBER, 42)}, {}, {}],
             [{}, {}]
         ]
         expected_stacks = [
-            [{}, {'i': _Variable(_VariableType.NUMBER, 12)}],
-            [{'i': _Variable(_VariableType.NUMBER, 12)}, {}, {}],
-            [{}, {'i': _Variable(_VariableType.NUMBER, 12)}]
+            [{}, {'i': Variable(VariableType.NUMBER, 12)}],
+            [{'i': Variable(VariableType.NUMBER, 12)}, {}, {}],
+            [{}, {'i': Variable(VariableType.NUMBER, 12)}]
         ]
         identifier = 'i'
-        variable = _Variable(_VariableType.NUMBER, 12)
+        variable = Variable(VariableType.NUMBER, 12)
 
         for stack, expected_stack in zip(stacks, expected_stacks):
-            scope_stack = _ScopeStack()
+            scope_stack = ScopeStack()
             scope_stack.stack = stack
             scope_stack.set_variable(identifier, variable)
             self.assertEqual(expected_stack, scope_stack.stack)
