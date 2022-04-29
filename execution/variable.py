@@ -1,6 +1,7 @@
 import numpy as np
 from enum import Enum, auto
 
+
 class Variable:
     def __init__(self, var_type, value):
         self.type = var_type
@@ -24,5 +25,5 @@ class VariableType(Enum):
     MATRIX = auto(),
     NUMBER = auto(),
     STRING = auto(),
-    DOTS = auto,
+    DOTS = auto(),
     UNDEFINED = auto()
