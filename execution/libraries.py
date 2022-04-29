@@ -34,6 +34,9 @@ class StandardLibrary:
         except OverflowError:
             e_print('Error: Number overflow')
             raise WithStackTraceException()
+        except ValueError as e:
+            e_print(e)
+            raise WithStackTraceException()
 
         if math.isnan(number):
             e_print('Error: Number is NaN')

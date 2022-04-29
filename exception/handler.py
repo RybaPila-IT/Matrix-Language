@@ -103,7 +103,6 @@ class ExceptionHandler:
         if type(exception) is MissingMainException:
             e_print(f'Error: Missing main function')
         elif type(exception) is WithStackTraceException:
-            e_print(f'Error: Printing stack')
             ExceptionHandler.__print_exception_stack(exception)
         elif type(exception) is UndefinedFunctionException:
             e_print(f'Error: Undefined function {exception.identifier}')

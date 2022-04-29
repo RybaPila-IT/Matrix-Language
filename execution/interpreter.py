@@ -140,8 +140,11 @@ class Interpreter:
         self.stack.close_context()
 
     def __bind_and_evaluate_library_function(self, identifier, args):
-        # TODO (radek.r) Implement this method.
-        pass
+        try:
+            self.lib_functions[identifier](args, self)
+        except WithStackTraceException as e:
+            e.stack.append('evaluate library function')
+            raise e
 
     def evaluate_assign_statement(self, assign_statement):
         try:
@@ -481,5 +484,3 @@ class Interpreter:
 
     def __load_program_functions(self, program):
         self.program_functions = program.functions_definitions.copy()
-
-
