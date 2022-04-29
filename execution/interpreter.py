@@ -471,9 +471,9 @@ class Interpreter:
         if first.type == VariableType.DOTS and second.type == VariableType.DOTS:
             self.result = variable
         elif first.type == VariableType.NUMBER and second.type == VariableType.DOTS:
-            self.result = Variable(VariableType.MATRIX, variable.value[first.value, :])
+            self.result = Variable(VariableType.MATRIX, np.array([variable.value[first.value, :]]))
         elif first.type == VariableType.DOTS and second.type == VariableType.NUMBER:
-            self.result = Variable(VariableType.MATRIX, variable.value[:, second.value])
+            self.result = Variable(VariableType.MATRIX, np.array([variable.value[:, second.value]]))
         else:
             self.result = Variable(VariableType.NUMBER, variable.value[first.value, second.value])
 
