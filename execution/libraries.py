@@ -19,7 +19,7 @@ class StandardLibrary:
             'transpose': StandardLibrary.__transpose,
             'ident': StandardLibrary.__ident,
             'size': StandardLibrary.__size,
-            'fill': StandardLibrary.__fill
+            'full': StandardLibrary.__full
         }
 
     @staticmethod
@@ -89,5 +89,21 @@ class StandardLibrary:
         )
 
     @staticmethod
-    def __fill():
-        pass
+    def __full(args, interpreter):
+        if (args_len := len(args)) != 3:
+            raise FunctionArgumentsMismatchException('full', 3, args_len)
+        rows, cols, value = args
+        if rows.type != VariableType.NUMBER:
+            e_print('Error: Full function must obtain a numbers only')
+            raise InvalidTypeException(rows.type)
+        if cols.type != VariableType.NUMBER:
+            e_print('Error: Full function must obtain a numbers only')
+            raise InvalidTypeException(cols.type)
+        if value.type != VariableType.NUMBER:
+            e_print('Error: Full function must obtain a numbers only')
+            raise InvalidTypeException(value.type)
+
+        interpreter.result = Variable(
+            VariableType.MATRIX,
+            np.full((rows.value, cols.value), value.value)
+        )
