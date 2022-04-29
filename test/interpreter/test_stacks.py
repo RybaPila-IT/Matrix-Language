@@ -1,7 +1,8 @@
 import unittest
 
 # noinspection PyProtectedMember
-from execution.interpreter import _FunctionStack, _ScopeStack, _Variable, _VariableType
+from execution.variable import Variable, VariableType
+from execution.interpreter import _FunctionStack, _ScopeStack
 
 
 class TestFunctionStack(unittest.TestCase):
@@ -15,11 +16,11 @@ class TestFunctionStack(unittest.TestCase):
         """
         init_contexts = [
             {},
-            {'i': _Variable(_VariableType.NUMBER, 42)}
+            {'i': Variable(VariableType.NUMBER, 42)}
         ]
         expected_scope_stacks = [
             [_ScopeStack(), _ScopeStack()],
-            [_ScopeStack(), _ScopeStack({'i': _Variable(_VariableType.NUMBER, 42)})]
+            [_ScopeStack(), _ScopeStack({'i': Variable(VariableType.NUMBER, 42)})]
         ]
 
         for init, expected in zip(init_contexts, expected_scope_stacks):
@@ -68,19 +69,19 @@ class TestScopeStack(unittest.TestCase):
             - Variable is not present in scopes at all
         """
         stacks = [
-            [{}, {'i': _Variable(_VariableType.NUMBER, 42)}],
-            [{'i': _Variable(_VariableType.NUMBER, 42)}, {}, {}],
+            [{}, {'i': Variable(VariableType.NUMBER, 42)}],
+            [{'i': Variable(VariableType.NUMBER, 42)}, {}, {}],
             [{}, {}]
         ]
         expected_vars = [
-            _Variable(_VariableType.NUMBER, 42),
-            _Variable(_VariableType.NUMBER, 42),
-            _Variable(_VariableType.UNDEFINED, None)
+            Variable(VariableType.NUMBER, 42),
+            Variable(VariableType.NUMBER, 42),
+            Variable(VariableType.UNDEFINED, None)
         ]
         expected_stacks = [
-            [{}, {'i': _Variable(_VariableType.NUMBER, 42)}],
-            [{'i': _Variable(_VariableType.NUMBER, 42)}, {}, {}],
-            [{}, {'i': _Variable(_VariableType.UNDEFINED, None)}]
+            [{}, {'i': Variable(VariableType.NUMBER, 42)}],
+            [{'i': Variable(VariableType.NUMBER, 42)}, {}, {}],
+            [{}, {'i': Variable(VariableType.UNDEFINED, None)}]
         ]
         identifier = 'i'
 
@@ -101,17 +102,17 @@ class TestScopeStack(unittest.TestCase):
             - Variable is not present in the scope stack
         """
         stacks = [
-            [{}, {'i': _Variable(_VariableType.NUMBER, 42)}],
-            [{'i': _Variable(_VariableType.NUMBER, 42)}, {}, {}],
+            [{}, {'i': Variable(VariableType.NUMBER, 42)}],
+            [{'i': Variable(VariableType.NUMBER, 42)}, {}, {}],
             [{}, {}]
         ]
         expected_stacks = [
-            [{}, {'i': _Variable(_VariableType.NUMBER, 12)}],
-            [{'i': _Variable(_VariableType.NUMBER, 12)}, {}, {}],
-            [{}, {'i': _Variable(_VariableType.NUMBER, 12)}]
+            [{}, {'i': Variable(VariableType.NUMBER, 12)}],
+            [{'i': Variable(VariableType.NUMBER, 12)}, {}, {}],
+            [{}, {'i': Variable(VariableType.NUMBER, 12)}]
         ]
         identifier = 'i'
-        variable = _Variable(_VariableType.NUMBER, 12)
+        variable = Variable(VariableType.NUMBER, 12)
 
         for stack, expected_stack in zip(stacks, expected_stacks):
             scope_stack = _ScopeStack()

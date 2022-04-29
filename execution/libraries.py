@@ -1,8 +1,8 @@
 import sys
 import math
 
-from execution.interpreter import Interpreter, _Variable, _VariableType
-from execution.exception import ExecutionException
+from execution.variable import Variable, VariableType
+from execution.exception import WithStackTraceException
 
 
 def e_print(*args, **kwargs):
@@ -22,31 +22,30 @@ class StandardLibrary:
         }
 
     @staticmethod
-    def __print(args: list, _):
+    def __print(args, _):
         for arg in args:
             print(arg.value, end=' ')
         print('\n')
 
     @staticmethod
-    def __cin(_, interpreter: Interpreter):
+    def __cin(_, interpreter):
         try:
             number = float(input('Provide a number: '))
         except OverflowError:
             e_print('Error: Number overflow')
-            raise ExecutionException()
+            raise WithStackTraceException()
 
         if math.isnan(number):
             e_print('Error: Number is NaN')
-            raise ExecutionException()
+            raise WithStackTraceException()
         if math.isinf(number):
             e_print('Error: Number is Infinity')
-            raise ExecutionException()
+            raise WithStackTraceException()
 
-        interpreter.result = _Variable(
-            _VariableType.NUMBER,
+        interpreter.result = Variable(
+            VariableType.NUMBER,
             number
         )
-
 
     @staticmethod
     def __transpose():

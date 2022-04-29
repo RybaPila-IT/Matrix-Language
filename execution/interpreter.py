@@ -1,6 +1,7 @@
 import numpy as np
-from enum import Enum, auto
 
+from execution.variable import Variable, VariableType
+from execution.libraries import StandardLibrary
 from execution.exception import *
 
 
@@ -91,7 +92,7 @@ class Interpreter:
             if return_statement.expression is not None:
                 return_statement.expression.accept(self)
             else:
-                self.result = _Variable(_VariableType.UNDEFINED, None)
+                self.result = Variable(VariableType.UNDEFINED, None)
             self.returns = True
         except WithStackTraceException as e:
             e.stack.append('evaluate return statement')
@@ -157,18 +158,18 @@ class Interpreter:
 
     def __modify_variable_with_index_operator(self, variable, index_operator, result):
         try:
-            if variable.type is not _VariableType.MATRIX:
+            if variable.type is not VariableType.MATRIX:
                 raise InvalidTypeException(variable.type)
-            if result.type not in [_VariableType.MATRIX, _VariableType.NUMBER]:
+            if result.type not in [VariableType.MATRIX, VariableType.NUMBER]:
                 raise InvalidTypeException(result.type)
 
             first, second = self.__evaluate_selectors(index_operator)
 
-            if first.type == _VariableType.DOTS and second.type == _VariableType.DOTS:
+            if first.type == VariableType.DOTS and second.type == VariableType.DOTS:
                 variable.value[:, :] = result.value
-            elif first.type == _VariableType.NUMBER and second.type == _VariableType.DOTS:
+            elif first.type == VariableType.NUMBER and second.type == VariableType.DOTS:
                 variable.value[first.value, :] = result.value
-            elif first.type == _VariableType.DOTS and second.type == _VariableType.NUMBER:
+            elif first.type == VariableType.DOTS and second.type == VariableType.NUMBER:
                 variable.value[:, second.value] = result.value
             else:
                 variable.value[first.value, second.value] = result.value
@@ -203,16 +204,16 @@ class Interpreter:
     @staticmethod
     def __check_variables_types_matching(left, right, for_assignment=False):
         # Special case for the assignment statement.
-        if for_assignment and left.type == _VariableType.UNDEFINED and right.type != _VariableType.UNDEFINED:
+        if for_assignment and left.type == VariableType.UNDEFINED and right.type != VariableType.UNDEFINED:
             return
         # Normally, we do not allow undefined variables to appear.
-        if left.type == _VariableType.UNDEFINED or right.type == _VariableType.UNDEFINED:
+        if left.type == VariableType.UNDEFINED or right.type == VariableType.UNDEFINED:
             raise UndefinedVariableException()
         if left.type == right.type:
             return
         # Matrix + Number and Matrix * Number is ok for expressions,
         # but for assignment types must be the same on both sides.
-        if not for_assignment and left.type == _VariableType.MATRIX and right.type == _VariableType.NUMBER:
+        if not for_assignment and left.type == VariableType.MATRIX and right.type == VariableType.NUMBER:
             return
         # Any other combinations of types are forbidden.
         raise TypesMismatchException(left.type, right.type)
@@ -220,15 +221,15 @@ class Interpreter:
     def __combine_additive_variables(self, left, right, operator):
         match operator:
             case '+':
-                if left.type == _VariableType.MATRIX and right.type == _VariableType.MATRIX:
-                    self.result = _Variable(_VariableType.MATRIX, np.add(left.value, right.value))
+                if left.type == VariableType.MATRIX and right.type == VariableType.MATRIX:
+                    self.result = Variable(VariableType.MATRIX, np.add(left.value, right.value))
                 else:
-                    self.result = _Variable(left.type, left.value + right.value)
+                    self.result = Variable(left.type, left.value + right.value)
             case '-':
-                if left.type == _VariableType.MATRIX and right.type == _VariableType.MATRIX:
-                    self.result = _Variable(_VariableType.MATRIX, np.add(left.value, np.negative(right.value)))
+                if left.type == VariableType.MATRIX and right.type == VariableType.MATRIX:
+                    self.result = Variable(VariableType.MATRIX, np.add(left.value, np.negative(right.value)))
                 else:
-                    self.result = _Variable(left.type, left.value - right.value)
+                    self.result = Variable(left.type, left.value - right.value)
 
     def evaluate_multiplicative_expression(self, mul_expression):
         try:
@@ -254,28 +255,28 @@ class Interpreter:
     def __combine_multiplicative_variables(self, left, right, operator):
         match operator:
             case '*':
-                if left.type == _VariableType.MATRIX and right.type == _VariableType.MATRIX:
+                if left.type == VariableType.MATRIX and right.type == VariableType.MATRIX:
                     # Matrix multiplication requires separate error handling.
                     try:
-                        self.result = _Variable(_VariableType.MATRIX, np.matmul(left.value, right.value))
+                        self.result = Variable(VariableType.MATRIX, np.matmul(left.value, right.value))
                     except ValueError:
                         raise MatrixDimensionsMismatchException(left.value.shape, right.value.shape)
                 else:
-                    self.result = _Variable(left.type, left.value * right.value)
+                    self.result = Variable(left.type, left.value * right.value)
             case '/':
-                if right.type == _VariableType.MATRIX and right.type == _VariableType.MATRIX:
+                if right.type == VariableType.MATRIX and right.type == VariableType.MATRIX:
                     raise TypesMismatchException(left.type, right.type)
-                if right.type == _VariableType.NUMBER and right.value == 0:
+                if right.type == VariableType.NUMBER and right.value == 0:
                     raise ZeroDivisionException()
-                self.result = _Variable(left.type, left.value / right.value)
+                self.result = Variable(left.type, left.value / right.value)
 
     def evaluate_negated_atomic_expression(self, expression):
         try:
             expression.atomic_expression.accept(self)
-            if self.result.type == _VariableType.MATRIX:
+            if self.result.type == VariableType.MATRIX:
                 self.result.value = np.negative(self.result.value)
                 return
-            if self.result.type == _VariableType.NUMBER:
+            if self.result.type == VariableType.NUMBER:
                 self.result.value = - self.result.value
                 return
             raise InvalidTypeException(self.result.type)
@@ -321,25 +322,25 @@ class Interpreter:
         self.result = not self.result if rel_condition.negated else self.result
 
     def __evaluate_result_into_bool(self):
-        if self.result.type == _VariableType.MATRIX:
+        if self.result.type == VariableType.MATRIX:
             self.result = np.any(self.result.value)
             return
-        if self.result.type == _VariableType.NUMBER:
+        if self.result.type == VariableType.NUMBER:
             self.result = self.result.value != 0
             return
-        if self.result.type == _VariableType.STRING:
+        if self.result.type == VariableType.STRING:
             self.result = self.result.value != ''
             return
 
         raise InvalidTypeException(self.result.type)
 
     def __evaluate_comparison_into_bool(self, left, right, operator):
-        invalid_types = [_VariableType.STRING, _VariableType.UNDEFINED]
+        invalid_types = [VariableType.STRING, VariableType.UNDEFINED]
         if left.type in invalid_types or right.type in invalid_types:
             raise InvalidTypeException(self.result.type)
         if left.type != right.type:
             raise TypesMismatchException(left, right)
-        if left.type == _VariableType.MATRIX:
+        if left.type == VariableType.MATRIX:
             self.__evaluate_matrix_comparison_into_bool(left, right, operator)
         else:
             self.__evaluate_number_comparison_into_bool(left, right, operator)
@@ -382,7 +383,7 @@ class Interpreter:
         try:
             for expression, separator in zip(matrix_literal.expressions, separators):
                 expression.accept(self)
-                if self.result.type != _VariableType.NUMBER:
+                if self.result.type != VariableType.NUMBER:
                     raise InvalidTypeException(self.result.type)
                 if separator == ';':
                     values.append([])
@@ -396,20 +397,20 @@ class Interpreter:
             e.stack.append('evaluate matrix literal')
             raise e
 
-        self.result = _Variable(
-            _VariableType.MATRIX,
+        self.result = Variable(
+            VariableType.MATRIX,
             np.array(values)
         )
 
     def evaluate_number_literal(self, number_literal):
-        self.result = _Variable(
-            _VariableType.NUMBER,
+        self.result = Variable(
+            VariableType.NUMBER,
             number_literal.value
         )
 
     def evaluate_string_literal(self, string_literal):
-        self.result = _Variable(
-            _VariableType.STRING,
+        self.result = Variable(
+            VariableType.STRING,
             string_literal.value
         )
 
@@ -419,12 +420,12 @@ class Interpreter:
             if identifier.index_operator is not None:
                 self.__evaluate_identifier_with_index_operator(variable, identifier.index_operator)
                 return
-            if variable.type == _VariableType.MATRIX:
+            if variable.type == VariableType.MATRIX:
                 # Matrix is passed by reference.
                 self.result = variable
                 return
             # Simple types are passed by value.
-            self.result = _Variable(
+            self.result = Variable(
                 variable.type,
                 variable.value
             )
@@ -433,7 +434,7 @@ class Interpreter:
             raise e
 
     def __evaluate_identifier_with_index_operator(self, variable, index_operator):
-        if variable.type != _VariableType.MATRIX:
+        if variable.type != VariableType.MATRIX:
             raise InvalidTypeException(variable.type)
         try:
             first, second = self.__evaluate_selectors(index_operator)
@@ -450,7 +451,7 @@ class Interpreter:
             first = self.result
             index_operator.second_selector.accept(self)
             second = self.result
-            allowed_selector_types = [_VariableType.DOTS, _VariableType.NUMBER]
+            allowed_selector_types = [VariableType.DOTS, VariableType.NUMBER]
             if first.type not in allowed_selector_types:
                 raise InvalidTypeException(first.type)
             if second.type not in allowed_selector_types:
@@ -462,21 +463,20 @@ class Interpreter:
         return first, second
 
     def __select_matrix_variable_content(self, variable, first, second):
-        if first.type == _VariableType.DOTS and second.type == _VariableType.DOTS:
+        if first.type == VariableType.DOTS and second.type == VariableType.DOTS:
             self.result = variable
-        elif first.type == _VariableType.NUMBER and second.type == _VariableType.DOTS:
-            self.result = _Variable(_VariableType.MATRIX, variable.value[first.value, :])
-        elif first.type == _VariableType.DOTS and second.type == _VariableType.NUMBER:
-            self.result = _Variable(_VariableType.MATRIX, variable.value[:, second.value])
+        elif first.type == VariableType.NUMBER and second.type == VariableType.DOTS:
+            self.result = Variable(VariableType.MATRIX, variable.value[first.value, :])
+        elif first.type == VariableType.DOTS and second.type == VariableType.NUMBER:
+            self.result = Variable(VariableType.MATRIX, variable.value[:, second.value])
         else:
-            self.result = _Variable(_VariableType.NUMBER, variable.value[first.value, second.value])
+            self.result = Variable(VariableType.NUMBER, variable.value[first.value, second.value])
 
     def evaluate_dots_select(self, _):
-        self.result = _Variable(_VariableType.DOTS, None)
+        self.result = Variable(VariableType.DOTS, None)
 
     def __load_library_functions(self):
-        # TODO (radek.r) Implement this method.
-        pass
+        self.lib_functions = {**self.lib_functions, **StandardLibrary.import_library()}
 
     def __load_program_functions(self, program):
         self.program_functions = program.functions_definitions.copy()
@@ -523,7 +523,7 @@ class _ScopeStack:
                 return scope[identifier]
         # If we did not find the variable it means that it has
         # been initialized in the current scope.
-        self.stack[-1][identifier] = _Variable(_VariableType.UNDEFINED, None)
+        self.stack[-1][identifier] = Variable(VariableType.UNDEFINED, None)
         return self.stack[-1][identifier]
 
     def set_variable(self, identifier, variable):
@@ -548,29 +548,3 @@ class _ScopeStack:
     def __hash__(self):
         return hash(self.stack)
 
-
-class _Variable:
-    def __init__(self, var_type, value):
-        self.type = var_type
-        self.value = value
-
-    def __eq__(self, other):
-        if type(other) is type(self):
-            if self.type == _VariableType.MATRIX and other.type == _VariableType.MATRIX:
-                return np.all(self.value == other.value)
-            return self.type == other.type and self.value == other.value
-        return False
-
-    def __hash__(self):
-        return hash((self.type, self.value))
-
-    def __repr__(self):
-        return f'Variable: type: {self.type}, value: {self.value}'
-
-
-class _VariableType(Enum):
-    MATRIX = auto(),
-    NUMBER = auto(),
-    STRING = auto(),
-    DOTS = auto,
-    UNDEFINED = auto()

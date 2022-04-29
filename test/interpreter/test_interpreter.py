@@ -2,7 +2,8 @@ import unittest
 import numpy as np
 
 # noinspection PyProtectedMember
-from execution.interpreter import Interpreter, _Variable, _VariableType, _FunctionStack
+from execution.interpreter import Interpreter, _FunctionStack
+from execution.variable import Variable, VariableType
 from execution.exception import *
 from syntax_tree.constructions import *
 from lexical.analyzer import LexicalAnalyzer
@@ -52,7 +53,7 @@ class TestInterpreter(unittest.TestCase):
         """
         interpreter = Interpreter(None)
         number_literal = NumberLiteral(42)
-        expected_result = _Variable(_VariableType.NUMBER, 42)
+        expected_result = Variable(VariableType.NUMBER, 42)
         interpreter.evaluate_number_literal(number_literal)
         self.assertEqual(expected_result, interpreter.result)
 
@@ -62,7 +63,7 @@ class TestInterpreter(unittest.TestCase):
         """
         interpreter = Interpreter(None)
         string_literal = StringLiteral('Lorem ipsum')
-        expected_result = _Variable(_VariableType.STRING, 'Lorem ipsum')
+        expected_result = Variable(VariableType.STRING, 'Lorem ipsum')
         interpreter.evaluate_string_literal(string_literal)
         self.assertEqual(expected_result, interpreter.result)
 
@@ -87,9 +88,9 @@ class TestInterpreter(unittest.TestCase):
             ], [',', ',', ';', ',', ',', ';', ',', ','])
         ]
         expected_results = [
-            _Variable(_VariableType.MATRIX, np.array([[42]])),
-            _Variable(_VariableType.MATRIX, np.array([[1, 2, 3]])),
-            _Variable(_VariableType.MATRIX, np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
+            Variable(VariableType.MATRIX, np.array([[42]])),
+            Variable(VariableType.MATRIX, np.array([[1, 2, 3]])),
+            Variable(VariableType.MATRIX, np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
         ]
         for matrix_literal, expected in zip(matrix_literals, expected_results):
             interpreter.evaluate_matrix_literal(matrix_literal)
@@ -126,7 +127,7 @@ class TestInterpreter(unittest.TestCase):
         """
         interpreter = Interpreter(None)
         dots_select = DotsSelect()
-        expected_result = _Variable(_VariableType.DOTS, None)
+        expected_result = Variable(VariableType.DOTS, None)
         interpreter.evaluate_dots_select(dots_select)
         self.assertEqual(expected_result, interpreter.result)
 
@@ -142,9 +143,9 @@ class TestInterpreter(unittest.TestCase):
         interpreter = Interpreter(None)
         # Start of test cases.
         inits = [
-            {'i': _Variable(_VariableType.NUMBER, 42)},
-            {'i': _Variable(_VariableType.STRING, 'Lorem ipsum')},
-            {'i': _Variable(_VariableType.MATRIX, np.array([[1, 2, 3], [4, 5, 6]]))}
+            {'i': Variable(VariableType.NUMBER, 42)},
+            {'i': Variable(VariableType.STRING, 'Lorem ipsum')},
+            {'i': Variable(VariableType.MATRIX, np.array([[1, 2, 3], [4, 5, 6]]))}
         ]
         is_same = [
             False,
@@ -171,7 +172,7 @@ class TestInterpreter(unittest.TestCase):
             - [0, :]
             - [0, 0]
         """
-        init = {'i': _Variable(_VariableType.MATRIX, np.array([[1, 2, 3], [4, 5, 6]]))}
+        init = {'i': Variable(VariableType.MATRIX, np.array([[1, 2, 3], [4, 5, 6]]))}
         function_stack = _FunctionStack()
         function_stack.open_context(init)
         interpreter = Interpreter(None)
@@ -185,9 +186,9 @@ class TestInterpreter(unittest.TestCase):
         ]
         expected_results = [
             init['i'],
-            _Variable(_VariableType.MATRIX, np.array([[1, 4]])),
-            _Variable(_VariableType.MATRIX, np.array([[1, 2, 3]])),
-            _Variable(_VariableType.NUMBER, 1)
+            Variable(VariableType.MATRIX, np.array([[1, 4]])),
+            Variable(VariableType.MATRIX, np.array([[1, 2, 3]])),
+            Variable(VariableType.NUMBER, 1)
         ]
         is_same = [
             True,
@@ -212,8 +213,8 @@ class TestInterpreter(unittest.TestCase):
             - Indexing non-matrix object
         """
         init = {
-            'i': _Variable(_VariableType.MATRIX, np.array([[1, 2, 3], [4, 5, 6]])),
-            'j': _Variable(_VariableType.NUMBER, 42)
+            'i': Variable(VariableType.MATRIX, np.array([[1, 2, 3], [4, 5, 6]])),
+            'j': Variable(VariableType.NUMBER, 42)
         }
         function_stack = _FunctionStack()
         function_stack.open_context(init)
@@ -253,12 +254,12 @@ class TestInterpreter(unittest.TestCase):
             - String evaluation.
         """
         init = {
-            'i': _Variable(_VariableType.MATRIX, np.array([0, 0, 0])),
-            'j': _Variable(_VariableType.MATRIX, np.array([1, 2, 3])),
-            'k': _Variable(_VariableType.NUMBER, 0),
-            'l': _Variable(_VariableType.NUMBER, 42),
-            'm': _Variable(_VariableType.STRING, ''),
-            'n': _Variable(_VariableType.STRING, 'Lorem ipsum')
+            'i': Variable(VariableType.MATRIX, np.array([0, 0, 0])),
+            'j': Variable(VariableType.MATRIX, np.array([1, 2, 3])),
+            'k': Variable(VariableType.NUMBER, 0),
+            'l': Variable(VariableType.NUMBER, 42),
+            'm': Variable(VariableType.STRING, ''),
+            'n': Variable(VariableType.STRING, 'Lorem ipsum')
         }
         function_stack = _FunctionStack()
         function_stack.open_context(init)
@@ -295,8 +296,8 @@ class TestInterpreter(unittest.TestCase):
             - Negating False result
         """
         init = {
-            'i': _Variable(_VariableType.MATRIX, np.array([0, 0, 0])),
-            'j': _Variable(_VariableType.MATRIX, np.array([1, 2, 3]))
+            'i': Variable(VariableType.MATRIX, np.array([0, 0, 0])),
+            'j': Variable(VariableType.MATRIX, np.array([1, 2, 3]))
         }
         function_stack = _FunctionStack()
         function_stack.open_context(init)
@@ -325,7 +326,7 @@ class TestInterpreter(unittest.TestCase):
             - Result is obtained is of UNDEFINED type
         """
         init = {
-            'i': _Variable(_VariableType.UNDEFINED, None),
+            'i': Variable(VariableType.UNDEFINED, None),
         }
         function_stack = _FunctionStack()
         function_stack.open_context(init)
@@ -531,8 +532,8 @@ class TestInterpreter(unittest.TestCase):
             NegatedAtomicExpression(NumberLiteral(42))
         ]
         expected_results = [
-            _Variable(_VariableType.MATRIX, np.array([[-42, -12]])),
-            _Variable(_VariableType.NUMBER, -42)
+            Variable(VariableType.MATRIX, np.array([[-42, -12]])),
+            Variable(VariableType.NUMBER, -42)
         ]
 
         for negated_atomic_expr, expected in zip(negated_atomic_expressions, expected_results):
@@ -592,11 +593,11 @@ class TestInterpreter(unittest.TestCase):
             )
         ]
         expected_results = [
-            _Variable(_VariableType.NUMBER, 504),
-            _Variable(_VariableType.NUMBER, 21),
-            _Variable(_VariableType.MATRIX, np.array([[7, 10], [15, 22]])),
-            _Variable(_VariableType.MATRIX, np.array([[2, 4]])),
-            _Variable(_VariableType.MATRIX, np.array([[.5, 1]]))
+            Variable(VariableType.NUMBER, 504),
+            Variable(VariableType.NUMBER, 21),
+            Variable(VariableType.MATRIX, np.array([[7, 10], [15, 22]])),
+            Variable(VariableType.MATRIX, np.array([[2, 4]])),
+            Variable(VariableType.MATRIX, np.array([[.5, 1]]))
         ]
 
         for mul_expression, expected in zip(mul_expressions, expected_results):
@@ -686,12 +687,12 @@ class TestInterpreter(unittest.TestCase):
             AdditiveExpression([MatrixLiteral([NumberLiteral(12), NumberLiteral(42)], [',']), NumberLiteral(1)], ['-']),
         ]
         expected_results = [
-            _Variable(_VariableType.NUMBER, 54),
-            _Variable(_VariableType.NUMBER, 30),
-            _Variable(_VariableType.MATRIX, np.array([[14, 44]])),
-            _Variable(_VariableType.MATRIX, np.array([[10, 40]])),
-            _Variable(_VariableType.MATRIX, np.array([[13, 43]])),
-            _Variable(_VariableType.MATRIX, np.array([[11, 41]]))
+            Variable(VariableType.NUMBER, 54),
+            Variable(VariableType.NUMBER, 30),
+            Variable(VariableType.MATRIX, np.array([[14, 44]])),
+            Variable(VariableType.MATRIX, np.array([[10, 40]])),
+            Variable(VariableType.MATRIX, np.array([[13, 43]])),
+            Variable(VariableType.MATRIX, np.array([[11, 41]]))
         ]
 
         for add_expression, expected in zip(add_expressions, expected_results):
@@ -738,9 +739,9 @@ class TestInterpreter(unittest.TestCase):
         """
         interpreter = Interpreter(None)
         inits = [
-            {'i': _Variable(_VariableType.NUMBER, 24)},
-            {'i': _Variable(_VariableType.STRING, 'Lorem ipsum')},
-            {'i': _Variable(_VariableType.MATRIX, np.array([[1, 2, 3]]))}
+            {'i': Variable(VariableType.NUMBER, 24)},
+            {'i': Variable(VariableType.STRING, 'Lorem ipsum')},
+            {'i': Variable(VariableType.MATRIX, np.array([[1, 2, 3]]))}
         ]
         assign_statements = [
             (
@@ -757,9 +758,9 @@ class TestInterpreter(unittest.TestCase):
             )
         ]
         expected_results = [
-            _Variable(_VariableType.NUMBER, 42),
-            _Variable(_VariableType.STRING, 'Hello world!'),
-            _Variable(_VariableType.MATRIX, np.array([[12]]))
+            Variable(VariableType.NUMBER, 42),
+            Variable(VariableType.STRING, 'Hello world!'),
+            Variable(VariableType.MATRIX, np.array([[12]]))
         ]
 
         for init, assign_statement_pair, expected in zip(inits, assign_statements, expected_results):
@@ -778,7 +779,7 @@ class TestInterpreter(unittest.TestCase):
         Test case is types mismatch for Matrix and Number.
         """
         init = {
-            'i': _Variable(_VariableType.MATRIX, np.array([[12, 42]]))
+            'i': Variable(VariableType.MATRIX, np.array([[12, 42]]))
         }
         assign_statement = AssignStatement(Identifier('i'), NumberLiteral(12))
         function_stack = _FunctionStack()
@@ -800,10 +801,10 @@ class TestInterpreter(unittest.TestCase):
         """
         interpreter = Interpreter(None)
         init = {
-            'i': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
-            'j': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
-            'k': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
-            'l': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'i': Variable(VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'j': Variable(VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'k': Variable(VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'l': Variable(VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
         }
         function_stack = _FunctionStack()
         function_stack.open_context(init)
@@ -829,10 +830,10 @@ class TestInterpreter(unittest.TestCase):
             ),
         ]
         expected_results = [
-            _Variable(_VariableType.MATRIX, np.array([[42, 2], [3, 4]])),
-            _Variable(_VariableType.MATRIX, np.array([[12, 42], [3, 4]])),
-            _Variable(_VariableType.MATRIX, np.array([[12, 2], [42, 4]])),
-            _Variable(_VariableType.MATRIX, np.array([[12, 42], [12, 42]]))
+            Variable(VariableType.MATRIX, np.array([[42, 2], [3, 4]])),
+            Variable(VariableType.MATRIX, np.array([[12, 42], [3, 4]])),
+            Variable(VariableType.MATRIX, np.array([[12, 2], [42, 4]])),
+            Variable(VariableType.MATRIX, np.array([[12, 42], [12, 42]]))
         ]
         identifiers = [
             'i',
@@ -857,10 +858,10 @@ class TestInterpreter(unittest.TestCase):
         """
         interpreter = Interpreter(None)
         init = {
-            'i': _Variable(_VariableType.NUMBER, 32),
-            'j': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
-            'k': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
-            'l': _Variable(_VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'i': Variable(VariableType.NUMBER, 32),
+            'j': Variable(VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'k': Variable(VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
+            'l': Variable(VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
         }
         function_stack = _FunctionStack()
         function_stack.open_context(init)
@@ -910,8 +911,8 @@ class TestInterpreter(unittest.TestCase):
             ReturnStatement(NumberLiteral(42))
         ]
         expected_results = [
-            _Variable(_VariableType.UNDEFINED, None),
-            _Variable(_VariableType.NUMBER, 42)
+            Variable(VariableType.UNDEFINED, None),
+            Variable(VariableType.NUMBER, 42)
         ]
 
         for return_statement, expected in zip(return_statements, expected_results):
@@ -1034,7 +1035,7 @@ class TestInterpreter(unittest.TestCase):
                 )
             )
         )
-        expected_result = _Variable(_VariableType.NUMBER, 7)
+        expected_result = Variable(VariableType.NUMBER, 7)
 
         try:
             interpreter.execute()
@@ -1066,7 +1067,7 @@ class TestInterpreter(unittest.TestCase):
                 )
             )
         )
-        expected_result = _Variable(_VariableType.NUMBER, 23)
+        expected_result = Variable(VariableType.NUMBER, 23)
 
         try:
             interpreter.execute()
@@ -1096,7 +1097,7 @@ class TestInterpreter(unittest.TestCase):
                 )
             )
         )
-        expected_result = _Variable(_VariableType.MATRIX, np.array([[3, 3], [6, 7]]))
+        expected_result = Variable(VariableType.MATRIX, np.array([[3, 3], [6, 7]]))
 
         try:
             interpreter.execute()
@@ -1124,7 +1125,7 @@ class TestInterpreter(unittest.TestCase):
                 )
             )
         )
-        expected_result = _Variable(_VariableType.NUMBER, 10)
+        expected_result = Variable(VariableType.NUMBER, 10)
 
         try:
             interpreter.execute()
@@ -1153,7 +1154,7 @@ class TestInterpreter(unittest.TestCase):
                 )
             )
         )
-        expected_result = _Variable(_VariableType.NUMBER, 30)
+        expected_result = Variable(VariableType.NUMBER, 30)
 
         try:
             interpreter.execute()
@@ -1181,7 +1182,7 @@ class TestInterpreter(unittest.TestCase):
                 )
             )
         )
-        expected_result = _Variable(_VariableType.NUMBER, 55)
+        expected_result = Variable(VariableType.NUMBER, 55)
 
         try:
             interpreter.execute()
