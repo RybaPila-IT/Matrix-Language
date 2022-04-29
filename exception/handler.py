@@ -11,8 +11,31 @@ def e_print(*args, **kwargs):
 
 class ExceptionHandler:
 
-    def handle_lexical_exception(self, exception):
-        pass
+    @staticmethod
+    def handle_lexical_exception(exception, source=None):
+        if type(exception) is WithPositionException:
+            e_print(f'Error: Lexical exception at position {exception.pos}')
+        elif type(exception) is LargeStringException:
+            e_print(f'Error: Large string at position {exception.pos}')
+        elif type(exception) is LargeIdentifierException:
+            e_print(f'Error: Large identifier at position {exception.pos}')
+        elif type(exception) is LargeNumberException:
+            e_print(f'Error: Large number at position {exception.pos}')
+        elif type(exception) is LargeDecimalPartException:
+            e_print(f'Error: Large number decimal part at position {exception.pos}')
+        elif type(exception) is InvalidTokenException:
+            e_print(f'Error: Invalid token at position {exception.pos}')
+        elif type(exception) is InvalidNumberException:
+            e_print(f'Error: Invalid number at position {exception.pos}')
+        elif type(exception) is InvalidStringException:
+            e_print(f'Error: Invalid string at position {exception.pos}')
+        else:
+            e_print(f'Error: Lexical error appeared')
+            return
+
+        if source is not None:
+            source.set_position(exception.pos)
+            e_print(source.get_line())
 
     @staticmethod
     def handle_syntactic_exception(exception):
