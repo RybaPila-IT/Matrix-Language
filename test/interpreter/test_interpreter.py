@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 
-# noinspection PyProtectedMember
-from execution.interpreter import Interpreter, _FunctionStack
+from execution.interpreter import Interpreter
+from execution.stacks import FunctionStack
 from execution.variable import Variable, VariableType
 from execution.exception import *
 from syntax_tree.constructions import *
@@ -154,7 +154,7 @@ class TestInterpreter(unittest.TestCase):
         ]
         identifier = Identifier('i')
         for init, same in zip(inits, is_same):
-            function_stack = _FunctionStack()
+            function_stack = FunctionStack()
             function_stack.open_context(init)
             interpreter.stack = function_stack
             interpreter.evaluate_identifier(identifier)
@@ -173,7 +173,7 @@ class TestInterpreter(unittest.TestCase):
             - [0, 0]
         """
         init = {'i': Variable(VariableType.MATRIX, np.array([[1, 2, 3], [4, 5, 6]]))}
-        function_stack = _FunctionStack()
+        function_stack = FunctionStack()
         function_stack.open_context(init)
         interpreter = Interpreter(None)
         interpreter.stack = function_stack
@@ -216,7 +216,7 @@ class TestInterpreter(unittest.TestCase):
             'i': Variable(VariableType.MATRIX, np.array([[1, 2, 3], [4, 5, 6]])),
             'j': Variable(VariableType.NUMBER, 42)
         }
-        function_stack = _FunctionStack()
+        function_stack = FunctionStack()
         function_stack.open_context(init)
         interpreter = Interpreter(None)
         interpreter.stack = function_stack
@@ -261,7 +261,7 @@ class TestInterpreter(unittest.TestCase):
             'm': Variable(VariableType.STRING, ''),
             'n': Variable(VariableType.STRING, 'Lorem ipsum')
         }
-        function_stack = _FunctionStack()
+        function_stack = FunctionStack()
         function_stack.open_context(init)
         interpreter = Interpreter(None)
         interpreter.stack = function_stack
@@ -299,7 +299,7 @@ class TestInterpreter(unittest.TestCase):
             'i': Variable(VariableType.MATRIX, np.array([0, 0, 0])),
             'j': Variable(VariableType.MATRIX, np.array([1, 2, 3]))
         }
-        function_stack = _FunctionStack()
+        function_stack = FunctionStack()
         function_stack.open_context(init)
         interpreter = Interpreter(None)
         interpreter.stack = function_stack
@@ -328,7 +328,7 @@ class TestInterpreter(unittest.TestCase):
         init = {
             'i': Variable(VariableType.UNDEFINED, None),
         }
-        function_stack = _FunctionStack()
+        function_stack = FunctionStack()
         function_stack.open_context(init)
         interpreter = Interpreter(None)
         interpreter.stack = function_stack
@@ -764,7 +764,7 @@ class TestInterpreter(unittest.TestCase):
         ]
 
         for init, assign_statement_pair, expected in zip(inits, assign_statements, expected_results):
-            function_stack = _FunctionStack()
+            function_stack = FunctionStack()
             function_stack.open_context(init)
             interpreter.stack = function_stack
             interpreter.evaluate_assign_statement(assign_statement_pair[0])
@@ -782,7 +782,7 @@ class TestInterpreter(unittest.TestCase):
             'i': Variable(VariableType.MATRIX, np.array([[12, 42]]))
         }
         assign_statement = AssignStatement(Identifier('i'), NumberLiteral(12))
-        function_stack = _FunctionStack()
+        function_stack = FunctionStack()
         function_stack.open_context(init)
         interpreter = Interpreter(None)
         interpreter.stack = function_stack
@@ -806,7 +806,7 @@ class TestInterpreter(unittest.TestCase):
             'k': Variable(VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
             'l': Variable(VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
         }
-        function_stack = _FunctionStack()
+        function_stack = FunctionStack()
         function_stack.open_context(init)
         interpreter.stack = function_stack
         assign_statements = [
@@ -863,7 +863,7 @@ class TestInterpreter(unittest.TestCase):
             'k': Variable(VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
             'l': Variable(VariableType.MATRIX, np.array([[1, 2], [3, 4]])),
         }
-        function_stack = _FunctionStack()
+        function_stack = FunctionStack()
         function_stack.open_context(init)
         interpreter.stack = function_stack
         assign_statements = [
