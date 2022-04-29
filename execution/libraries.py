@@ -64,8 +64,15 @@ class StandardLibrary:
         interpreter.result = variable
 
     @staticmethod
-    def __ident():
-        pass
+    def __ident(args, interpreter):
+        if (args_len := len(args)) != 1:
+            raise FunctionArgumentsMismatchException('ident', 1, args_len)
+        variable = args[0]
+        if variable.type != VariableType.NUMBER:
+            e_print('Error: Ident function must obtain a number')
+            raise InvalidTypeException(variable.type)
+
+        interpreter.result = Variable(VariableType.MATRIX, np.identity(variable.value))
 
     @staticmethod
     def __size():
