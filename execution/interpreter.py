@@ -368,17 +368,17 @@ class Interpreter:
     def __evaluate_number_comparison_into_bool(self, left, right, operator):
         match operator:
             case '<':
-                self.result = left.value < right.value
+                self.result = bool(left.value < right.value)
             case '>':
-                self.result = left.value > right.value
+                self.result = bool(left.value > right.value)
             case '>=':
-                self.result = left.value >= right.value
+                self.result = bool(left.value >= right.value)
             case '<=':
-                self.result = left.value <= right.value
+                self.result = bool(left.value <= right.value)
             case '==':
-                self.result = left.value == right.value
+                self.result = bool(left.value == right.value)
             case '!=':
-                self.result = left.value != right.value
+                self.result = bool(left.value != right.value)
 
     def evaluate_matrix_literal(self, matrix_literal):
         # Hacky solution, we append fake separator in order to use zip function
