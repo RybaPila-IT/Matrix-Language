@@ -114,7 +114,7 @@ class ExceptionHandler:
             )
             ExceptionHandler.__print_exception_stack(exception)
         elif type(exception) is TypesMismatchException:
-            e_print(f'Error: Types mismatch; left {exception.left} right{exception.right}')
+            e_print(f'Error: Types mismatch; left {exception.left} right {exception.right}')
             ExceptionHandler.__print_exception_stack(exception)
         elif type(exception) is MatrixDimensionsMismatchException:
             e_print(

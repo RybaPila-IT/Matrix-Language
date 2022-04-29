@@ -1,8 +1,9 @@
 import sys
 import math
+import numpy as np
 
 from execution.variable import Variable, VariableType
-from execution.exception import WithStackTraceException
+from execution.exception import WithStackTraceException, FunctionArgumentsMismatchException, InvalidTypeException
 
 
 def e_print(*args, **kwargs):
@@ -51,8 +52,16 @@ class StandardLibrary:
         )
 
     @staticmethod
-    def __transpose():
-        pass
+    def __transpose(args, interpreter):
+        if (args_len := len(args)) != 1:
+            raise FunctionArgumentsMismatchException('transpose', 1, args_len)
+        variable = args[0]
+        if variable.type != VariableType.MATRIX:
+            e_print('Error: Transpose function must obtain a matrix')
+            raise InvalidTypeException(variable.type)
+
+        variable.value = variable.value.T
+        interpreter.result = variable
 
     @staticmethod
     def __ident():

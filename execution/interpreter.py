@@ -119,6 +119,7 @@ class Interpreter:
                 evaluated_arguments.append(self.result)
             except WithStackTraceException as e:
                 e.stack.append(f'evaluate function {function_call.identifier} arguments')
+                raise e
         return evaluated_arguments
 
     def __bind_and_evaluate_program_function(self, identifier, args):
