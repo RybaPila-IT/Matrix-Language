@@ -2,12 +2,18 @@ from tokens.token import Token
 from tokens.type import *
 
 
-class FunctionDuplicationException(Exception):
+class SyntacticException(Exception):
+    def __init__(self):
+        super().__init__()
+
+
+class FunctionDuplicationException(SyntacticException):
     def __init__(self, identifier):
+        super().__init__()
         self.identifier = identifier
 
 
-class WithContextException(Exception):
+class WithContextException(SyntacticException):
     def __init__(self, context):
         super().__init__()
         self.context = context

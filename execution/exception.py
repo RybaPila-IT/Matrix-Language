@@ -1,14 +1,14 @@
-class InterpreterException(Exception):
+class ExecutionException(Exception):
     def __init__(self):
         super().__init__()
 
 
-class MissingMainException(InterpreterException):
+class MissingMainException(ExecutionException):
     def __init__(self):
         super().__init__()
 
 
-class WithStackTraceException(InterpreterException):
+class WithStackTraceException(ExecutionException):
     def __init__(self):
         super().__init__()
         self.stack = []
@@ -23,7 +23,9 @@ class UndefinedFunctionException(WithStackTraceException):
 class FunctionArgumentsMismatchException(WithStackTraceException):
     def __init__(self, identifier, expected, received):
         super().__init__()
-        self.stack.insert(0, (identifier, expected, received))
+        self.identifier = identifier
+        self.expected = expected
+        self.received = received
 
 
 class TypesMismatchException(WithStackTraceException):

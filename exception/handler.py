@@ -43,7 +43,56 @@ class ExceptionHandler:
             e_print(f'Error: Expected identifier but got {exception.received} in context {exception.context}')
         elif type(exception) is WithContextException:
             e_print(f'Error: In context {exception.context}')
+        else:
+            e_print(f'Error: Syntactic exception appeared')
 
     @staticmethod
     def handle_execution_exception(exception):
-        pass
+        if type(exception) is MissingMainException:
+            e_print(f'Error: Missing main function')
+        elif type(exception) is WithStackTraceException:
+            e_print(f'Error: Printing stack')
+            ExceptionHandler.__print_exception_stack(exception)
+        elif type(exception) is UndefinedFunctionException:
+            e_print(f'Error: Undefined function {exception.identifier}')
+            ExceptionHandler.__print_exception_stack(exception)
+        elif type(exception) is FunctionArgumentsMismatchException:
+            e_print(
+                f'Error: Function {exception.identifier} arguments mismatch; expected {exception.expected} '
+                f'but got {exception.received}'
+            )
+            ExceptionHandler.__print_exception_stack(exception)
+        elif type(exception) is TypesMismatchException:
+            e_print(f'Error: Types mismatch; left {exception.left} right{exception.right}')
+            ExceptionHandler.__print_exception_stack(exception)
+        elif type(exception) is MatrixDimensionsMismatchException:
+            e_print(
+                f'Error: Matrix dimensions mismatch; left dimensions {exception.left_dim} '
+                f'right dimensions {exception.right_dim}'
+            )
+            ExceptionHandler.__print_exception_stack(exception)
+        elif type(exception) is ZeroDivisionException:
+            e_print(f'Error: Division by zero')
+            ExceptionHandler.__print_exception_stack(exception)
+        elif type(exception) is InvalidTypeException:
+            e_print(f'Error: Invalid type {exception.type}')
+            ExceptionHandler.__print_exception_stack(exception)
+        elif type(exception) is InvalidMatrixLiteralException:
+            e_print(f'Error: Invalid matrix literal')
+            ExceptionHandler.__print_exception_stack(exception)
+        elif type(exception) is IndexException:
+            e_print(f'Error: Index operator exception')
+            e_print(exception.error)
+            ExceptionHandler.__print_exception_stack(exception)
+        elif type(exception) is UndefinedVariableException:
+            e_print(f'Error: Usage of undefined variable')
+            ExceptionHandler.__print_exception_stack(exception)
+        else:
+            e_print(f'Error: Execution exception appeared')
+
+    @staticmethod
+    def __print_exception_stack(exception):
+        e_print('Stack trace:')
+        for item in exception.stack:
+            e_print(item)
+
