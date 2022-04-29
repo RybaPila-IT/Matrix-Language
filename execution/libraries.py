@@ -75,8 +75,18 @@ class StandardLibrary:
         interpreter.result = Variable(VariableType.MATRIX, np.identity(variable.value))
 
     @staticmethod
-    def __size():
-        pass
+    def __size(args, interpreter):
+        if (args_len := len(args)) != 1:
+            raise FunctionArgumentsMismatchException('size', 1, args_len)
+        variable = args[0]
+        if variable.type != VariableType.MATRIX:
+            e_print('Error: Size function must obtain a matrix')
+            raise InvalidTypeException(variable.type)
+
+        interpreter.result = Variable(
+            VariableType.MATRIX,
+            np.array([list(variable.value.shape)])
+        )
 
     @staticmethod
     def __fill():
