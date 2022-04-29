@@ -2,6 +2,9 @@ class Program:
     def __init__(self, functions_definitions):
         self.functions_definitions = functions_definitions
 
+    def accept(self, visitor):
+        visitor.evaluate_program(self)
+
     def __repr__(self):
         return str.format('Program:\nFunctions: {}\n', self.functions_definitions)
 
@@ -19,6 +22,9 @@ class FunctionDefinition:
         self.identifier = identifier
         self.parameters = parameters
         self.statement_block = statement_block
+
+    def accept(self, visitor):
+        visitor.evaluate_function_definition(self)
 
     def __repr__(self):
         return str.format(
@@ -46,6 +52,9 @@ class StatementBlock:
     def __repr__(self):
         return str.format('Statement block\n\tStatements: {}\n', self.statements)
 
+    def accept(self, visitor):
+        visitor.evaluate_statement_block(self)
+
     def __eq__(self, other):
         if type(other) is type(self):
             return self.statements == other.statements
@@ -60,6 +69,9 @@ class IfStatement:
         self.condition = condition
         self.statement_block = statement_block
         self.else_statement = else_statement
+
+    def accept(self, visitor):
+        visitor.evaluate_if_statement(self)
 
     def __repr__(self):
         return str.format(
@@ -85,6 +97,9 @@ class UntilStatement:
         self.condition = condition
         self.statement_block = statement_block
 
+    def accept(self, visitor):
+        visitor.evaluate_until_statement(self)
+
     def __repr__(self):
         return str.format(
             'Until statement\n\tCondition: {}\n\tStatement block: {}\n',
@@ -106,6 +121,9 @@ class ReturnStatement:
     def __init__(self, expression=None):
         self.expression = expression
 
+    def accept(self, visitor):
+        visitor.evaluate_return_statement(self)
+
     def __repr__(self):
         return str.format('Return statement\n\tExpression: {}\n', self.expression)
 
@@ -122,6 +140,9 @@ class FunctionCall:
     def __init__(self, identifier, arguments):
         self.identifier = identifier
         self.arguments = arguments
+
+    def accept(self, visitor):
+        visitor.evaluate_function_call(self)
 
     def __repr__(self):
         return str.format(
@@ -145,6 +166,9 @@ class AssignStatement:
         self.identifier = identifier
         self.expression = expression
 
+    def accept(self, visitor):
+        visitor.evaluate_assign_statement(self)
+
     def __repr__(self):
         return str.format(
             'Assign statement\n\tIdentifier: {}\n\tExpression: {}\n',
@@ -162,32 +186,13 @@ class AssignStatement:
         return hash((self.identifier, self.expression))
 
 
-class IndexOperator:
-    def __init__(self, first_selector, second_selector):
-        self.first_selector = first_selector
-        self.second_selector = second_selector
-
-    def __repr__(self):
-        return str.format(
-            'Index operator\n\tFirst selector: {}\n\tSecond selector: {}\n',
-            self.first_selector,
-            self.second_selector
-        )
-
-    def __eq__(self, other):
-        if type(other) is type(self):
-            return self.first_selector == other.first_selector and \
-                   self.second_selector == other.second_selector
-        return False
-
-    def __hash__(self):
-        return hash((self.first_selector, self.second_selector))
-
-
 class AdditiveExpression:
     def __init__(self, multiplicative_expressions, operators=None):
         self.multiplicative_expressions = multiplicative_expressions
         self.operators = operators
+
+    def accept(self, visitor):
+        visitor.evaluate_additive_expression(self)
 
     def __repr__(self):
         return str.format(
@@ -211,6 +216,9 @@ class MultiplicativeExpression:
         self.atomic_expressions = atomic_expressions
         self.operators = operators
 
+    def accept(self, visitor):
+        visitor.evaluate_multiplicative_expression(self)
+
     def __repr__(self):
         return str.format(
             'Multiplicative Expression\n\tAtomic expressions: {}\n\tOperators: {}\n',
@@ -232,6 +240,9 @@ class NegatedAtomicExpression:
     def __init__(self, atomic_expression):
         self.atomic_expression = atomic_expression
 
+    def accept(self, visitor):
+        visitor.evaluate_negated_atomic_expression(self)
+
     def __repr__(self):
         return str.format(
             'Negated Atomic Expression\n\tAtomic expression: {}\n',
@@ -251,6 +262,9 @@ class OrCondition:
     def __init__(self, and_conditions):
         self.and_conditions = and_conditions
 
+    def accept(self, visitor):
+        visitor.evaluate_or_condition(self)
+
     def __repr__(self):
         return str.format(
             'OR Condition\n\tAND conditions: {}\n',
@@ -269,6 +283,9 @@ class OrCondition:
 class AndCondition:
     def __init__(self, rel_conditions):
         self.rel_conditions = rel_conditions
+
+    def accept(self, visitor):
+        visitor.evaluate_and_condition(self)
 
     def __repr__(self):
         return str.format(
@@ -291,6 +308,9 @@ class RelationCondition:
         self.left_expression = left_expression
         self.operator = operator
         self.right_expression = right_expression
+
+    def accept(self, visitor):
+        visitor.evaluate_relation_condition(self)
 
     def __repr__(self):
         return str.format(
@@ -318,6 +338,9 @@ class MatrixLiteral:
         self.expressions = expressions
         self.separators = separators
 
+    def accept(self, visitor):
+        visitor.evaluate_matrix_literal(self)
+
     def __repr__(self):
         return str.format(
             'Matrix Literal\n\tExpressions: {}\n\tSeparators: {}\n',
@@ -339,6 +362,9 @@ class StringLiteral:
     def __init__(self, value):
         self.value = value
 
+    def accept(self, visitor):
+        visitor.evaluate_string_literal(self)
+
     def __repr__(self):
         return str.format('String Literal\n\tValue: {}\n', self.value)
 
@@ -354,6 +380,9 @@ class StringLiteral:
 class NumberLiteral:
     def __init__(self, value):
         self.value = value
+
+    def accept(self, visitor):
+        visitor.evaluate_number_literal(self)
 
     def __repr__(self):
         return str.format('Number Literal\n\tValue: {}\n', self.value)
@@ -372,6 +401,9 @@ class Identifier:
         self.name = name
         self.index_operator = index_operator
 
+    def accept(self, visitor):
+        visitor.evaluate_identifier(self)
+
     def __repr__(self):
         return str.format(
             'Identifier\n\tName: {}\n\tIndex operator: {}\n',
@@ -389,9 +421,34 @@ class Identifier:
         return hash((self.name, self.index_operator))
 
 
+class IndexOperator:
+    def __init__(self, first_selector, second_selector):
+        self.first_selector = first_selector
+        self.second_selector = second_selector
+
+    def __repr__(self):
+        return str.format(
+            'Index operator\n\tFirst selector: {}\n\tSecond selector: {}\n',
+            self.first_selector,
+            self.second_selector
+        )
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.first_selector == other.first_selector and \
+                   self.second_selector == other.second_selector
+        return False
+
+    def __hash__(self):
+        return hash((self.first_selector, self.second_selector))
+
+
 class DotsSelect:
     def __int__(self):
         pass
+
+    def accept(self, visitor):
+        visitor.evaluate_dots_select(self)
 
     def __repr__(self):
         return str.format('Dots Select\n')
