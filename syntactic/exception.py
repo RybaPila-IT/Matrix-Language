@@ -2,21 +2,27 @@ from tokens.token import Token
 from tokens.type import *
 
 
-class FunctionDuplicationException(Exception):
+class SyntacticException(Exception):
+    def __init__(self):
+        super().__init__()
+
+
+class FunctionDuplicationException(SyntacticException):
     def __init__(self, identifier):
+        super().__init__()
         self.identifier = identifier
 
 
-class UnexpectedTokenException(Exception):
-    def __init__(self, token):
-        super().__init__()
-        self.token = token
-
-
-class WithContextException(Exception):
+class WithContextException(SyntacticException):
     def __init__(self, context):
         super().__init__()
         self.context = context
+
+
+class UnexpectedTokenException(WithContextException):
+    def __init__(self, token, context):
+        super().__init__(context)
+        self.token = token
 
 
 class MissingConditionException(WithContextException):
@@ -52,8 +58,8 @@ class MissingSelectorException(WithContextException):
 class TokenMismatchException(WithContextException):
     def __init__(self, expected, received, context):
         super().__init__(context)
-        self.expected_token = expected
-        self.received_token = received
+        self.expected = expected
+        self.received = received
 
 
 class MissingBracketException(TokenMismatchException):

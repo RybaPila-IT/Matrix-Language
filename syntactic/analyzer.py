@@ -96,7 +96,7 @@ class SyntacticAnalyzer:
                     break
 
             if result is None:
-                raise UnexpectedTokenException(self.__current_token())
+                raise UnexpectedTokenException(self.__current_token(), Sc.StatementBlock)
 
             statements.append(result)
 
@@ -159,7 +159,7 @@ class SyntacticAnalyzer:
         # Here we know, that we are parsing assignment statement.
         index_operator = self.__try_parse_index_operator()
         if not self.__is_token_then_next(TokenType.ASSIGNMENT):
-            raise UnexpectedTokenException(self.__current_token())
+            raise UnexpectedTokenException(self.__current_token(), Sc.Assignment)
         if (expression := self.__try_parse_additive_expression()) is None:
             raise MissingExpressionException(self.__current_token(), Sc.Assignment)
 
@@ -171,7 +171,7 @@ class SyntacticAnalyzer:
         if (first_selector := self.__try_parse_selector()) is None:
             raise MissingSelectorException(self.__current_token(), Sc.IndexOperator)
         if not self.__is_token_then_next(TokenType.COMMA):
-            raise UnexpectedTokenException(self.__current_token())
+            raise UnexpectedTokenException(self.__current_token(), Sc.IndexOperator)
         if (second_selector := self.__try_parse_selector()) is None:
             raise MissingSelectorException(self.__current_token(), Sc.IndexOperator)
         if not self.__is_token_then_next(TokenType.CLOSE_SQUARE_BRACKET):

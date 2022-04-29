@@ -2,8 +2,13 @@ import sys
 
 from data.source.pipeline import positional_file_source_pipe
 from lexical.analyzer import LexicalAnalyzer
+from lexical.exception import LexicalException
 from syntactic.analyzer import SyntacticAnalyzer
+from syntactic.exception import SyntacticException
 from execution.interpreter import Interpreter
+from execution.exception import ExecutionException
+from exception.handler import ExceptionHandler
+
 
 arguments_err_mess = '''
 Expected single argument with file name containing the source code of the program. 
@@ -12,23 +17,23 @@ Got {} arguments instead.
 
 
 def start_interpretation(file_name):
-    # TODO (radek.r) Add real exception handler handling the lexical, syntactic and runtime errors as well.
+    # Separate data source handling since it may be used for lexical
+    # exceptions reporting.
     try:
-        interpreter = interpreter_construction_pipeline(file_name)
-        interpreter.execute()
+        data_source = positional_file_source_pipe(file_name)
     except IOError as e:
         print(e)
         return
 
-
-def interpreter_construction_pipeline(file_name):
-    return Interpreter(
-        SyntacticAnalyzer(
-            LexicalAnalyzer(
-                positional_source=positional_file_source_pipe(file_name)
-            )
-        )
-    )
+    try:
+        interpreter = Interpreter(SyntacticAnalyzer(LexicalAnalyzer(data_source)))
+        interpreter.execute()
+    except LexicalException as e:
+        ExceptionHandler.handle_lexical_exception(e, data_source.unified_source.raw_source)
+    except SyntacticException as e:
+        ExceptionHandler.handle_syntactic_exception(e, data_source.unified_source.raw_source)
+    except ExecutionException as e:
+        ExceptionHandler.handle_execution_exception(e)
 
 
 if __name__ == '__main__':

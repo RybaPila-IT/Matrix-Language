@@ -1039,7 +1039,7 @@ class TestInterpreter(unittest.TestCase):
         try:
             interpreter.execute()
             self.assertEqual(expected_result, interpreter.result)
-        except InterpreterException:
+        except ExecutionException:
             self.assertEqual(True, False, 'Program must execute!')
 
     def test_program_evaluation_v2(self):
@@ -1071,7 +1071,7 @@ class TestInterpreter(unittest.TestCase):
         try:
             interpreter.execute()
             self.assertEqual(expected_result, interpreter.result)
-        except InterpreterException:
+        except ExecutionException:
             self.assertEqual(True, False, 'Program must execute!')
 
     def test_program_evaluation_v3(self):
@@ -1101,7 +1101,7 @@ class TestInterpreter(unittest.TestCase):
         try:
             interpreter.execute()
             self.assertEqual(expected_result, interpreter.result)
-        except InterpreterException:
+        except ExecutionException:
             self.assertEqual(True, False, 'Program must execute!')
 
     def test_program_evaluation_v4(self):
@@ -1129,7 +1129,7 @@ class TestInterpreter(unittest.TestCase):
         try:
             interpreter.execute()
             self.assertEqual(expected_result, interpreter.result)
-        except InterpreterException:
+        except ExecutionException:
             self.assertEqual(True, False, 'Program must execute!')
 
     def test_program_evaluation_v5(self):
@@ -1158,7 +1158,7 @@ class TestInterpreter(unittest.TestCase):
         try:
             interpreter.execute()
             self.assertEqual(expected_result, interpreter.result)
-        except InterpreterException:
+        except ExecutionException:
             self.assertEqual(True, False, 'Program must execute!')
 
     def test_program_evaluation_v6(self):
@@ -1186,7 +1186,7 @@ class TestInterpreter(unittest.TestCase):
         try:
             interpreter.execute()
             self.assertEqual(expected_result, interpreter.result)
-        except InterpreterException:
+        except ExecutionException:
             self.assertEqual(True, False, 'Program must execute!')
 
 

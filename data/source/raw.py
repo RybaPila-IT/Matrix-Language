@@ -12,6 +12,13 @@ class RawFileSource:
     def position(self):
         return self.file.tell()
 
+    def set_position(self, position):
+        self.file.seek(0)
+        self.file.seek(position)
+
+    def get_line(self):
+        return self.file.readline()
+
     def __del__(self):
         try:
             self.file.close()
