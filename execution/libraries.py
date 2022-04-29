@@ -19,7 +19,8 @@ class StandardLibrary:
             'transpose': StandardLibrary.__transpose,
             'ident': StandardLibrary.__ident,
             'size': StandardLibrary.__size,
-            'full': StandardLibrary.__full
+            'full': StandardLibrary.__full,
+            'reshape': StandardLibrary.__reshape
         }
 
     @staticmethod
@@ -107,3 +108,27 @@ class StandardLibrary:
             VariableType.MATRIX,
             np.full((rows.value, cols.value), value.value)
         )
+
+    @staticmethod
+    def __reshape(args, interpreter):
+        if (args_len := len(args)) != 3:
+            raise FunctionArgumentsMismatchException('reshape', 3, args_len)
+        matrix, rows, cols = args
+        if matrix.type != VariableType.MATRIX:
+            e_print('Error: Reshape function must obtain a matrix as first argument')
+            raise InvalidTypeException(rows.type)
+        if rows.type != VariableType.NUMBER:
+            e_print('Error: Reshape function must obtain a number as second argument')
+            raise InvalidTypeException(cols.type)
+        if cols.type != VariableType.NUMBER:
+            e_print('Error: Reshape function must obtain a number as third argument')
+            raise InvalidTypeException(cols.type)
+
+        try:
+            interpreter.result = Variable(
+                VariableType.MATRIX,
+                np.reshape(matrix.value, (rows.value, cols.value))
+            )
+        except ValueError as e:
+            e_print(e)
+            raise WithStackTraceException()

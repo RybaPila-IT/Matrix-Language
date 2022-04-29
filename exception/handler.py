@@ -85,7 +85,8 @@ class ExceptionHandler:
                 ExceptionHandler.__print_exception_line(source, exception.received.position)
         elif type(exception) is MissingBracketException:
             e_print(
-                f'Error: Expected bracket {exception.expected} but got {exception.token} in context {exception.context}'
+                f'Error: Expected bracket {exception.expected} but got {exception.received} '
+                f'in context {exception.context}'
             )
             if source is not None:
                 ExceptionHandler.__print_exception_line(source, exception.received.position)
