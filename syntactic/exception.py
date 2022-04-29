@@ -58,8 +58,8 @@ class MissingSelectorException(WithContextException):
 class TokenMismatchException(WithContextException):
     def __init__(self, expected, received, context):
         super().__init__(context)
-        self.expected_token = expected
-        self.received_token = received
+        self.expected = expected
+        self.received = received
 
 
 class MissingBracketException(TokenMismatchException):

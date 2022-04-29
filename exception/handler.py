@@ -34,36 +34,65 @@ class ExceptionHandler:
             return
 
         if source is not None:
-            source.set_position(exception.pos)
-            e_print(source.get_line())
+            ExceptionHandler.__print_exception_line(source, exception.pos)
 
     @staticmethod
-    def handle_syntactic_exception(exception):
+    def __print_exception_line(source, position):
+        if type(position) is tuple:
+            source.set_position(0)
+            for i in range(position[0] - 1):
+                source.get_line()
+            e_print('▼'.rjust(position[1], ' '))
+        else:
+            source.set_position(position)
+
+        e_print(source.get_line())
+
+    @staticmethod
+    def handle_syntactic_exception(exception, source=None):
         if type(exception) is FunctionDuplicationException:
             e_print(f'Error: duplicated {exception.identifier} function definition')
         elif type(exception) is UnexpectedTokenException:
             e_print(f'Error: Received unexpected token {exception.token} in context {exception.context}')
+            if source is not None:
+                ExceptionHandler.__print_exception_line(source, exception.token.position)
         elif type(exception) is MissingConditionException:
             e_print(f'Error: Expected condition but got {exception.token} in context {exception.context}')
+            if source is not None:
+                ExceptionHandler.__print_exception_line(source, exception.token.position)
         elif type(exception) is MissingExpressionException:
             e_print(f'Error: Expected expression but got {exception.token} in context {exception.context}')
+            if source is not None:
+                ExceptionHandler.__print_exception_line(source, exception.token.position)
         elif type(exception) is MissingStatementBlockException:
             e_print(f'Error: Expected statement block but got {exception.token} in context {exception.context}')
+            if source is not None:
+                ExceptionHandler.__print_exception_line(source, exception.token.position)
         elif type(exception) is MissingElseStatementException:
             e_print(f'Error: Expected else statement but got {exception.token} in context {exception.context}')
+            if source is not None:
+                ExceptionHandler.__print_exception_line(source, exception.token.position)
         elif type(exception) is MissingSelectorException:
             e_print(f'Error: Expected selector but got {exception.token} in context {exception.context}')
+            if source is not None:
+                ExceptionHandler.__print_exception_line(source, exception.token.position)
         elif type(exception) is TokenMismatchException:
             e_print(
                 f'Error: Token mismatch; expected {exception.expected} '
                 f'but got {exception.received} in context {exception.context}'
             )
+            if source is not None:
+                ExceptionHandler.__print_exception_line(source, exception.received.position)
         elif type(exception) is MissingBracketException:
             e_print(
                 f'Error: Expected bracket {exception.expected} but got {exception.token} in context {exception.context}'
             )
+            if source is not None:
+                ExceptionHandler.__print_exception_line(source, exception.received.position)
         elif type(exception) is MissingIdentifierException:
             e_print(f'Error: Expected identifier but got {exception.received} in context {exception.context}')
+            if source is not None:
+                ExceptionHandler.__print_exception_line(source, exception.received.position)
         elif type(exception) is WithContextException:
             e_print(f'Error: In context {exception.context}')
         else:
@@ -116,6 +145,5 @@ class ExceptionHandler:
     @staticmethod
     def __print_exception_stack(exception):
         e_print('Stack trace:')
-        for item in exception.stack:
+        for item in reversed(exception.stack):
             e_print(item)
-
