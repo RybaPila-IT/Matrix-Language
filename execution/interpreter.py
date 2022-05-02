@@ -341,8 +341,10 @@ class Interpreter:
 
     def __evaluate_comparison_into_bool(self, left, right, operator):
         invalid_types = [VariableType.STRING, VariableType.UNDEFINED]
-        if left.type in invalid_types or right.type in invalid_types:
-            raise InvalidTypeException(self.result.type)
+        if left.type in invalid_types:
+            raise InvalidTypeException(left.type)
+        if right.type in invalid_types:
+            raise InvalidTypeException(right.type)
         if left.type != right.type:
             raise TypesMismatchException(left, right)
         if left.type == VariableType.MATRIX:
