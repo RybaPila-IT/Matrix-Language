@@ -106,7 +106,7 @@ class StandardLibrary:
 
         interpreter.result = Variable(
             VariableType.MATRIX,
-            np.full((rows.value, cols.value), value.value)
+            np.full((int(rows.value), int(cols.value)), int(value.value))
         )
 
     @staticmethod

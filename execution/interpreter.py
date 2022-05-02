@@ -173,11 +173,11 @@ class Interpreter:
             if first.type == VariableType.DOTS and second.type == VariableType.DOTS:
                 variable.value[:, :] = result.value
             elif first.type == VariableType.NUMBER and second.type == VariableType.DOTS:
-                variable.value[first.value, :] = result.value
+                variable.value[int(first.value), :] = result.value
             elif first.type == VariableType.DOTS and second.type == VariableType.NUMBER:
-                variable.value[:, second.value] = result.value
+                variable.value[:, int(second.value)] = result.value
             else:
-                variable.value[first.value, second.value] = result.value
+                variable.value[int(first.value), int(second.value)] = result.value
 
         except ValueError as e:
             raise IndexException(e)
@@ -473,11 +473,11 @@ class Interpreter:
         if first.type == VariableType.DOTS and second.type == VariableType.DOTS:
             self.result = variable
         elif first.type == VariableType.NUMBER and second.type == VariableType.DOTS:
-            self.result = Variable(VariableType.MATRIX, np.array([variable.value[first.value, :]]))
+            self.result = Variable(VariableType.MATRIX, np.array([variable.value[int(first.value), :]]))
         elif first.type == VariableType.DOTS and second.type == VariableType.NUMBER:
-            self.result = Variable(VariableType.MATRIX, np.array([variable.value[:, second.value]]))
+            self.result = Variable(VariableType.MATRIX, np.array([variable.value[:, int(second.value)]]))
         else:
-            self.result = Variable(VariableType.NUMBER, variable.value[first.value, second.value])
+            self.result = Variable(VariableType.NUMBER, variable.value[int(first.value), int(second.value)])
 
     def evaluate_dots_select(self, _):
         self.result = Variable(VariableType.DOTS, None)
