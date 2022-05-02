@@ -1,0 +1,47 @@
+# Demonstrates all language constructions.
+
+# Function definition.
+sum(a, b) {
+    return a + b
+}
+
+main() {
+    # Data types.
+    string = "Lorem ipsum with $"quotes$" !"
+    number = 42.42
+    matrix = [ 1, 2;
+               3, 4 ]
+
+    # Operators.
+    print(12 + 32 - 2 * 1 / 5)
+    print(matrix + 1 - 3)
+    print(matrix * 2 / 4)
+    print(matrix * matrix * matrix)
+
+    # If construction.
+    a = 8
+    if (a >= 6 and a <= 12) {
+        print("var in range [6, 12]")
+    } else if (a < 6) {
+        print("var a smaller than 6")
+    } else {
+        print("var a greater than 12")
+    }
+
+    # Until construction.
+    b = 100
+    until (!b) {
+        b = b - 1
+    }
+
+    # Function call.
+    print(sum(12, -2))
+
+    # Indexing.
+    matrix = [ 10, 20;
+               30, 40 ]
+    print(matrix[0, 0])
+    print(matrix[0, :])
+    print(matrix[:, 1])
+    print(matrix[:, :])
+}

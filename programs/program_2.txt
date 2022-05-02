@@ -1,0 +1,25 @@
+# This program demonstrates that simple types are passed by value
+# and matrices are passed by reference.
+
+mat_change(mat) {
+    mat = mat * [ 0, -1;
+                  1,  0 ]
+    # Setting the first column.
+    mat[:, 0] = [12, 32]
+}
+
+num_change(num) {
+    num = num + 42.42
+}
+
+main() {
+    mat = [ 1, 2;
+            3, 4 ]
+    num = 42.42
+
+    mat_change(mat)
+    num_change(num)
+
+    print(mat)
+    print(num)
+}

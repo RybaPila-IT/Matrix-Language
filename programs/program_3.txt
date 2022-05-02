@@ -1,0 +1,24 @@
+#-------------------------------------------#
+# This is a simple Fibonacci number program #
+#-------------------------------------------#
+
+
+fib(n, mem) {
+    if (n <= 0) {
+        return 0
+    }
+    if (mem[0, n] != 0) {
+        return mem[0, n]
+    }
+    # Calculate the Fibonacci number and save it.
+    mem[0, n] = fib(n-1, mem) + fib(n-2, mem)
+    return mem[0, n]
+}
+
+main() {
+    print("Which Fibonacci number do you want to calculate?")
+    a = cin()
+    mem = full(1, a+1, 0)
+    mem[0, 1] = 1
+    print(fib(a, mem))
+}
